@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Chat - Windows 11 Edition by notcontentkitohio</title>
+  <style>
+    :root {
+      --win11-glass: rgba(243, 243, 243, 0.88);
+      --win11-accent: #0078d4;
+      --win11-accent-hover: #106ebe;
+      --win11-radius: 12px;
+      --win11-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background: linear-gradient(135deg, #0d1117, #161b22, #1f2937);
+      background-size: 400% 400%;
+      animation: gradientBg 15s ease infinite;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    @keyframes gradientBg {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .win11-window {
+      width: 480px;
+      height: 620px;
+      background: var(--win11-glass);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: var(--win11-radius);
+      box-shadow: var(--win11-shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: winOpen 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes winOpen {
+      0% { opacity: 0; transform: scale(0.92) translateY(30px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .title-bar {
+      height: 40px;
+      background: rgba(255, 255, 255, 0.4);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 14px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      user-select: none;
+    }
+
+    .title-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .brand-tag {
+      background: var(--win11-accent);
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+
+    .win-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .win-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      cursor: pointer;
+    }
+    .close { background: #ff5f56; }
+    .minimize { background: #ffbd2e; }
+    .maximize { background: #27c93f; }
+
+    .app-content {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .messages-container {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(10px);
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .messages-container::-webkit-scrollbar { width: 6px; }
+    .messages-container::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 10px; }
+
+    .msg-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      animation: msgPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes msgPop {
+      0% { opacity: 0; transform: translateY(12px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .avatar:hover { transform: scale(1.15) rotate(4deg); }
+
+    .msg-body {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      padding: 8px 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      max-width: 82%;
+    }
+
+    .msg-author {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--win11-accent);
+      cursor: pointer;
+      margin-bottom: 2px;
+    }
+
+    .msg-text {
+      font-size: 13.5px;
+      color: #222;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+
+    .input-wrapper { display: flex; gap: 8px; }
+
+    .win11-input {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      background: rgba(255, 255, 255, 0.85);
+      font-size: 13.5px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .win11-input:focus {
+      background: #ffffff;
+      border-color: var(--win11-accent);
+      box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.2);
+    }
+
+    .win11-btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      background: var(--win11-accent);
+      color: white;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0, 120, 212, 0.3);
+    }
+    .win11-btn:hover {
+      background: var(--win11-accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .login-box {
+      text-align: center;
+      padding: 40px 20px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      margin: auto 0;
+    }
+
+    .footer-credit {
+      text-align: center;
+      font-size: 11px;
+      color: #666;
+      padding-top: 4px;
+    }
+
+    /* Windows 11 Modal Overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      width: 360px;
+      padding: 20px;
+      border-radius: var(--win11-radius);
+      box-shadow: var(--win11-shadow);
+      text-align: center;
+      position: relative;
+      animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes modalFadeIn {
+      0% { opacity: 0; transform: scale(0.88); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .big-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 10px;
+      border: 3px solid var(--win11-accent);
+    }
+
+    .close-modal-btn {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #666;
+    }
+
+    /* Khung Chỉnh Ảnh Avatar */
+    .crop-preview-box {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 3px solid var(--win11-accent);
+      margin: 12px auto;
+      overflow: hidden;
+      position: relative;
+      background: #e0e0e0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .crop-preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.1s linear;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 12px 0;
+      font-size: 12px;
+      color: #444;
+      text-align: left;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .control-row input[type="range"] {
+      flex: 1;
+    }
+  </style>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+
+  <div class="win11-window">
+    <div class="title-bar">
+      <div class="title-brand">
+        <span>🌐 Global Anonymous Chat</span>
+        <span class="brand-tag">notcontentkitohio</span>
+      </div>
+      <div class="win-controls">
+        <span class="win-btn minimize"></span>
+        <span class="win-btn maximize"></span>
+        <span class="win-btn close"></span>
+      </div>
+    </div>
+
+    <div class="app-content">
+      <div id="loginScreen" class="login-box">
+        <h3 style="margin-bottom: 8px; color: #111;">Chào mừng đến với Global Chat</h3>
+        <p style="font-size: 13px; color: #555; margin-bottom: 20px;">Trải nghiệm trò chuyện thời gian thực phong cách Windows 11</p>
+        <button class="win11-btn" style="background: #5865F2;" onclick="location.href='/auth/discord'">
+          Đăng nhập với Discord
+        </button>
+      </div>
+
+      <div id="chatScreen" style="display: none; flex-direction: column; height: 100%; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 12px; color: #444; font-weight: 600;">● Real-time Connection</span>
+          <button class="win11-btn" style="padding: 4px 10px; font-size: 11px;" onclick="openAvatarEditor()">📸 Đổi Avatar</button>
+        </div>
+
+        <div class="messages-container" id="messageContainer"></div>
+
+        <div class="input-wrapper">
+          <input type="text" id="msgInput" class="win11-input" placeholder="Nhập tin nhắn..." onkeydown="if(event.key==='Enter') sendMsg()">
+          <button class="win11-btn" onclick="sendMsg()">Gửi</button>
+        </div>
+      </div>
+
+      <div class="footer-credit">
+        Powered by <b>notcontentkitohio</b> • Windows 11 UI
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Xem Profile -->
+  <div id="profileModal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="close-modal-btn" onclick="closeModal('profileModal')">✕</button>
+      <img id="modalAvatar" class="big-avatar" src="" alt="Avatar">
+      <h3 id="modalName" style="color: #111; margin-bottom: 4px;"></h3>
+      <p id="modalId" style="font-size: 12px; color: #666; margin-bottom: 12px;"></p>
+      <div style="background: rgba(0,120,212,0.08); padding: 8px; border-radius: 6px; font-size: 12px; color: var(--win11-accent); font-weight: 600;">
+        ● Đang hoạt động trên mạng toàn cầu
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Đổi & Chỉnh Ảnh Avatar -->
+  <div id="avatarEditorModal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="close-modal-btn" onclick="closeModal('avatarEditorModal')">✕</button>
+      <h3 style="font-size: 15px; color: #111; margin-bottom: 10px;">🎨 Chỉnh Sửa Avatar</h3>
+
+      <!-- Xem trước -->
+      <div class="crop-preview-box">
+        <img id="avatarPreview" class="crop-preview-img" src="" alt="Preview">
+      </div>
+
+      <!-- Chọn nguồn ảnh -->
+      <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+        <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+        <button class="win11-btn" style="flex: 1; padding: 6px; font-size: 12px; background: #28a745;" onclick="document.getElementById('avatarFileInput').click()">📁 Tải ảnh từ máy</button>
+      </div>
+
+      <input type="text" id="avatarUrlInput" class="win11-input" style="width: 100%; margin-bottom: 10px; font-size: 12px;" placeholder="Hoặc dán URL ảnh (Catbox, Imgur...)" oninput="handleUrlInput(event)">
+
+      <!-- Thanh công cụ chỉnh sửa -->
+      <div class="control-group">
+        <div class="control-row">
+          <span>🔍 Phóng to:</span>
+          <input type="range" id="zoomRange" min="1" max="3" step="0.1" value="1" oninput="updateImageTransform()">
+        </div>
+        <div class="control-row">
+          <span>🔄 Xoay ảnh:</span>
+          <input type="range" id="rotateRange" min="0" max="360" step="5" value="0" oninput="updateImageTransform()">
+        </div>
+      </div>
+
+      <!-- Nút thao tác -->
+      <div style="display: flex; gap: 8px; margin-top: 15px;">
+        <button class="win11-btn" style="flex: 1; background: #6e6e6e;" onclick="closeModal('avatarEditorModal')">Hủy</button>
+        <button class="win11-btn" style="flex: 1;" onclick="applyNewAvatar()">Lưu Thay Đổi</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    let currentUser = null;
+    let tempAvatarData = "";
+    let zoomLevel = 1;
+    let rotateAngle = 0;
+
+    fetch('/api/me')
+      .then(res => res.json())
+      .then(user => {
+        if (user) {
+          currentUser = user;
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('chatScreen').style.display = 'flex';
+        }
+      });
+
+    function renderMessage(data) {
+      const container = document.getElementById('messageContainer');
+      const msgElement = document.createElement('div');
+      msgElement.className = 'msg-card';
+
+      const safeData = JSON.stringify(data).replace(/'/g, "&apos;");
+
+      msgElement.innerHTML = `
+        <img src="${data.avatar}" class="avatar" onclick='viewProfile(${safeData})'>
+        <div class="msg-body">
+          <div class="msg-author" onclick='viewProfile(${safeData})'>${data.user}</div>
+          <div class="msg-text">${data.text}</div>
+        </div>
+      `;
+      container.appendChild(msgElement);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    socket.on('load_history', (history) => {
+      const container = document.getElementById('messageContainer');
+      container.innerHTML = '';
+      history.forEach((data) => renderMessage(data));
+    });
+
+    socket.on('receive_message', (data) => {
+      renderMessage(data);
+    });
+
+    function sendMsg() {
+      const input = document.getElementById('msgInput');
+      if (input.value.trim() !== "" && currentUser) {
+        socket.emit('send_message', {
+          userId: currentUser.id,
+          user: currentUser.username,
+          avatar: currentUser.avatar,
+          text: input.value
+        });
+        input.value = "";
+      }
+    }
+
+    /* Mở Trình Chỉnh Sửa Avatar */
+    function openAvatarEditor() {
+      tempAvatarData = currentUser.avatar;
+      document.getElementById('avatarPreview').src = tempAvatarData;
+      document.getElementById('avatarUrlInput').value = tempAvatarData.startsWith('data:') ? '' : tempAvatarData;
+      document.getElementById('zoomRange').value = 1;
+      document.getElementById('rotateRange').value = 0;
+      zoomLevel = 1;
+      rotateAngle = 0;
+      updateImageTransform();
+      document.getElementById('avatarEditorModal').style.display = 'flex';
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          tempAvatarData = e.target.result;
+          document.getElementById('avatarPreview').src = tempAvatarData;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleUrlInput(event) {
+      const url = event.target.value.trim();
+      if (url) {
+        tempAvatarData = url;
+        document.getElementById('avatarPreview').src = url;
+      }
+    }
+
+    function updateImageTransform() {
+      zoomLevel = document.getElementById('zoomRange').value;
+      rotateAngle = document.getElementById('rotateRange').value;
+      const img = document.getElementById('avatarPreview');
+      img.style.transform = `scale(${zoomLevel}) rotate(${rotateAngle}deg)`;
+    }
+
+    /* Tạo Canvas crop/render ảnh đã chỉnh sửa thành Data URL chuẩn */
+    function applyNewAvatar() {
+      const img = document.getElementById('avatarPreview');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const size = 200;
+
+      canvas.width = size;
+      canvas.height = size;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.clip();
+
+      ctx.translate(size / 2, size / 2);
+      ctx.rotate((rotateAngle * Math.PI) / 180);
+      ctx.scale(zoomLevel, zoomLevel);
+
+      ctx.drawImage(img, -size / 2, -size / 2, size, size);
+      ctx.restore();
+
+      currentUser.avatar = canvas.toDataURL('image/png');
+      closeModal('avatarEditorModal');
+    }
+
+    function viewProfile(data) {
+      document.getElementById('modalAvatar').src = data.avatar;
+      document.getElementById('modalName').innerText = data.user;
+      document.getElementById('modalId').innerText = "ID: " + (data.userId || "N/A");
+      document.getElementById('profileModal').style.display = 'flex';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+  </script>
+</body>
+</html>

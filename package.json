@@ -1,0 +1,17 @@
+{
+  "name": "global-chat",
+  "version": "1.0.0",
+  "description": "Global Anonymous Chat App",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "passport": "^0.7.0",
+    "passport-discord": "^0.1.4",
+    "socket.io": "^4.7.5"
+  }
+}
