@@ -16,18 +16,23 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Database giả lập lưu danh sách User đăng ký bằng Email
+// Database lưu danh sách người dùng đăng ký bằng Email
 const usersDB = [];
 
-// Discord OAuth Credentials
-const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || '123456789';
-const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || 'secret';
-const DISCORD_CALLBACK_URL = process.env.DISCORD_CALLBACK_URL || 'http://localhost:3000/auth/discord/callback';
+// Domain Render chính thức
+const DOMAIN = 'https://global-chat-app-es7g.onrender.com';
 
-// Google OAuth Credentials
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'YOUR_GOOGLE_CLIENT_SECRET';
-const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback';
+// ----------------------------------------------------
+// CẤU HÌNH KEY XÁC THỰC DISCORD & GOOGLE (ĐIỀN KEY VÀO ĐÂY)
+// ----------------------------------------------------
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || 'ĐIỀN_DISCORD_CLIENT_ID_THẬT';
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || 'ĐIỀN_DISCORD_CLIENT_SECRET_THẬT';
+const DISCORD_CALLBACK_URL = process.env.DISCORD_CALLBACK_URL || `${DOMAIN}/auth/discord/callback`;
+
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'ĐIỀN_GOOGLE_CLIENT_ID_THẬT';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'ĐIỀN_GOOGLE_CLIENT_SECRET_THẬT';
+const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || `${DOMAIN}/auth/google/callback`;
+// ----------------------------------------------------
 
 app.use(session({
   secret: 'notcontentkitohio_super_secret_2026',
@@ -41,7 +46,7 @@ app.use(passport.session());
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
-// 1. Local Auth (Đăng nhập Email/Pass)
+// 1. Local Auth (Đăng nhập Email & Mật khẩu)
 passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
   const user = usersDB.find(u => u.email === email);
   if (!user) return done(null, false, { message: 'Email không tồn tại' });
@@ -51,7 +56,7 @@ passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, don
   return done(null, user);
 }));
 
-// 2. Discord Auth
+// 2. Discord OAuth
 passport.use(new DiscordStrategy({
     clientID: DISCORD_CLIENT_ID,
     clientSecret: DISCORD_CLIENT_SECRET,
@@ -70,7 +75,7 @@ passport.use(new DiscordStrategy({
   }
 ));
 
-// 3. Google Auth
+// 3. Google OAuth
 passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
@@ -86,11 +91,11 @@ passport.use(new GoogleStrategy({
   }
 ));
 
-// Routes Đăng ký / Đăng nhập
+// API Routes Đăng ký / Đăng nhập local
 app.post('/api/register', (req, res) => {
   const { username, email, password } = req.body;
   if (usersDB.find(u => u.email === email)) {
-    return res.status(400).json({ error: 'Email này đã được sử dụng!' });
+    return res.status(400).json({ error: 'Email này đã được đăng ký!' });
   }
   const hashedPassword = bcrypt.hashSync(password, 10);
   const newUser = {
@@ -102,7 +107,7 @@ app.post('/api/register', (req, res) => {
   };
   usersDB.push(newUser);
   req.login(newUser, err => {
-    if (err) return res.status(500).json({ error: 'Lỗi đăng nhập tự động' });
+    if (err) return res.status(500).json({ error: 'Lỗi đăng nhập hệ thống' });
     return res.json({ success: true, user: newUser });
   });
 });
@@ -111,7 +116,7 @@ app.post('/api/login', passport.authenticate('local'), (req, res) => {
   res.json({ success: true, user: req.user });
 });
 
-// OAuth Routes
+// OAuth Redirect Routes
 app.get('/auth/discord', passport.authenticate('discord'));
 app.get('/auth/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), (req, res) => res.redirect('/'));
 
@@ -127,6 +132,7 @@ app.get('/api/me', (req, res) => {
   else res.json(null);
 });
 
+// Socket.io Real-time Messaging
 let messageHistory = [];
 
 const server = http.createServer(app);
@@ -147,5 +153,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server đang chạy tại cổng ${PORT}`);
+  console.log(`Server đang chạy mượt mà tại cổng ${PORT}`);
 });

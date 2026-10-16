@@ -1,7 +1,7 @@
 {
   "name": "global-chat",
   "version": "1.0.0",
-  "description": "Global Anonymous Chat App",
+  "description": "Global Anonymous Chat App - Windows 11 UI",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

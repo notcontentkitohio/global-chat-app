@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global Chat - Windows 11 Edition by notcontentkitohio</title>
-  <!-- Icon SVG FontAwesome Font -->
+  <title>Global Chat - Windows 11 UI by notcontentkitohio</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -97,7 +96,6 @@
       overflow: hidden;
     }
 
-    /* Auth Forms */
     .auth-box {
       background: rgba(255, 255, 255, 0.85);
       border-radius: 10px;
@@ -202,7 +200,6 @@
     }
     .divider span { padding: 0 8px; }
 
-    /* Chat Elements */
     .messages-container {
       flex: 1;
       background: rgba(255, 255, 255, 0.65);
@@ -321,7 +318,7 @@
     </div>
 
     <div class="app-content">
-      <!-- Màn hình Auth (Đăng ký / Đăng nhập) -->
+      <!-- Màn hình Auth -->
       <div id="authScreen" class="auth-box">
         <div class="auth-tabs">
           <button class="auth-tab-btn active" onclick="switchAuthTab('login')"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</button>
@@ -370,7 +367,7 @@
         </div>
       </div>
 
-      <!-- Màn hình Khung Chat -->
+      <!-- Màn hình Chat -->
       <div id="chatScreen" style="display: none; flex-direction: column; height: 100%; gap: 10px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 12px; color: #444; font-weight: 600;">
@@ -424,7 +421,7 @@
         <button class="win11-btn" style="flex: 1; padding: 6px; font-size: 11px; background: #28a745;" onclick="document.getElementById('avatarFileInput').click()"><i class="fa-solid fa-upload"></i> Tải ảnh từ máy</button>
       </div>
 
-      <input type="text" id="avatarUrlInput" class="win11-input" style="width: 100%; margin-bottom: 10px; font-size: 11px;" placeholder="Hoặc dán URL ảnh (Catbox, Imgur...)" oninput="handleUrlInput(event)">
+      <input type="text" id="avatarUrlInput" class="win11-input" style="width: 100%; margin-bottom: 10px; font-size: 11px;" placeholder="Hoặc dán URL ảnh" oninput="handleUrlInput(event)">
 
       <div style="display: flex; gap: 8px; margin-top: 10px;">
         <button class="win11-btn" style="flex: 1; background: #6e6e6e;" onclick="closeModal('avatarEditorModal')">Hủy</button>
