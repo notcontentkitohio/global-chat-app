@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(cors());
@@ -14,7 +15,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(session({
-  secret: 'win11_ultimate_vscode_secret_2026',
+  secret: 'win11_ultimate_google_crop_secret_2026',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -48,8 +49,16 @@ function saveData() {
   }
 }
 
-// REST APIs Auth & Users
-app.post('/api/register-request-otp', (req, res) => {
+// Cấu hình Transporter Nodemailer (Gửi Email Thật nếu truyền ENV, mặc định fallback mã trên màn hình)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER || '',
+    pass: process.env.EMAIL_PASS || ''
+  }
+});
+
+app.post('/api/register-request-otp', async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin!' });
@@ -75,9 +84,23 @@ app.post('/api/register-request-otp', (req, res) => {
     expiresAt: Date.now() + 10 * 60 * 1000
   });
 
+  // Thử gửi Email qua Nodemailer
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    try {
+      await transporter.sendMail({
+        from: '"Global Chat" <' + process.env.EMAIL_USER + '>',
+        to: cleanEmail,
+        subject: 'Mã xác minh tài khoản Global Chat',
+        text: `Mã OTP xác minh của bạn là: ${otpCode} (Có hiệu lực trong 10 phút)`
+      });
+    } catch (e) {
+      console.log('Chưa thể gửi email thật, tự động fallback trả mã OTP về UI');
+    }
+  }
+
   return res.json({
     success: true,
-    message: `Mã OTP xác minh cho ${cleanEmail}`,
+    message: `Mã OTP xác minh đã được tạo cho ${cleanEmail}`,
     debugOtp: otpCode
   });
 });
@@ -182,14 +205,13 @@ app.post('/api/update-profile', (req, res) => {
   res.json({ success: true, user: safeUser });
 });
 
-// API VS CODE WEB EDITOR (Dành cho Owner)
 app.get('/api/editor/get-file', (req, res) => {
   const user = db.users.find(u => u.id === req.session.userId);
   if (!user || user.role !== 'owner') {
     return res.status(403).json({ error: 'Chỉ Owner mới có quyền chỉnh sửa Code!' });
   }
 
-  const { filename } = req.query; // 'index.html', 'server.js', 'package.json'
+  const { filename } = req.query;
   const allowedFiles = ['index.html', 'server.js', 'package.json'];
   if (!allowedFiles.includes(filename)) {
     return res.status(400).json({ error: 'Tệp tin không được phép!' });
@@ -284,5 +306,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`[VSCode Web Editor Server] Đang chạy tại cổng ${PORT}`);
+  console.log(`[Google Crop UI Server] Đang chạy tại cổng ${PORT}`);
 });
