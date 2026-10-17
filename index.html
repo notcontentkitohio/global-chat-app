@@ -493,7 +493,7 @@
         if(d.success) { me = d.user; showMainApp(); showToast('Đăng nhập thành công!'); }
         else showToast(d.error, 'fa-triangle-exclamation');
       } catch (err) {
-        showToast('Lỗi kết nối máy chủ!', 'fa-triangle-exclamation');
+        showToast('Lỗi kết nối máy chủ! Hãy đợi vài giây thử lại.', 'fa-triangle-exclamation');
       }
     }
 

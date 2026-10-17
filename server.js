@@ -14,7 +14,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(session({
-  secret: 'win11_direct_register_secret_2026',
+  secret: 'win11_render_persist_guard_secret_2026',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -27,14 +27,22 @@ let db = {
   messages: []
 };
 
-if (fs.existsSync(DATA_FILE)) {
-  try {
-    const rawData = fs.readFileSync(DATA_FILE, 'utf8');
-    db = JSON.parse(rawData);
-    if (!db.users) db.users = [];
-    if (!db.messages) db.messages = [];
-  } catch (err) {
-    console.error("Lỗi đọc file data.json", err);
+// ĐỌC DỮ LIỆU AN TOÀN
+function loadData() {
+  if (fs.existsSync(DATA_FILE)) {
+    try {
+      const rawData = fs.readFileSync(DATA_FILE, 'utf8');
+      db = JSON.parse(rawData);
+      if (!Array.isArray(db.users)) db.users = [];
+      if (!Array.isArray(db.messages)) db.messages = [];
+    } catch (err) {
+      console.error("Lỗi đọc file data.json, khởi tạo database mới:", err);
+      db = { users: [], messages: [] };
+      saveData();
+    }
+  } else {
+    db = { users: [], messages: [] };
+    saveData();
   }
 }
 
@@ -42,13 +50,16 @@ function saveData() {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
   } catch (err) {
-    console.error("Lỗi ghi file data.json", err);
+    console.error("Lỗi ghi file data.json:", err);
   }
 }
 
-// ĐĂNG KÝ TRỰC TIẾP (BỎ XÁC MINH EMAIL)
+loadData();
+
+// ĐĂNG KÝ TRỰC TIẾP (AN TOÀN CHỐNG LỖI)
 app.post('/api/register', (req, res) => {
   try {
+    loadData();
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin!' });
@@ -56,8 +67,9 @@ app.post('/api/register', (req, res) => {
 
     const cleanEmail = email.toLowerCase().trim();
     const existing = db.users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
+    
     if (existing) {
-      return res.status(400).json({ error: 'Email này đã được sử dụng!' });
+      return res.status(400).json({ error: 'Email này đã được sử dụng! Bạn hãy chuyển sang tab Đăng Nhập nhé.' });
     }
 
     const isOwner = cleanEmail.includes('kitchannel190882') || cleanEmail.includes('kitohio') || db.users.length === 0;
@@ -84,35 +96,41 @@ app.post('/api/register', (req, res) => {
     return res.json({ success: true, user: safeUser });
   } catch (err) {
     console.error('Lỗi khi đăng ký:', err);
-    return res.status(500).json({ error: 'Lỗi máy chủ khi tạo tài khoản!' });
+    return res.status(500).json({ error: 'Lỗi hệ thống máy chủ!' });
   }
 });
 
-// ĐĂNG NHẬP
+// ĐĂNG NHẬP (AN TOÀN CHỐNG CRASH)
 app.post('/api/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Vui lòng nhập đầy đủ email và mật khẩu!' });
+  try {
+    loadData();
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Vui lòng nhập đầy đủ email và mật khẩu!' });
 
-  const cleanEmail = email.toLowerCase().trim();
-  const user = db.users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
+    const cleanEmail = email.toLowerCase().trim();
+    const user = db.users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
 
-  if (!user || !bcrypt.compareSync(password, user.password)) {
-    return res.status(400).json({ error: 'Email hoặc mật khẩu không đúng!' });
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+      return res.status(400).json({ error: 'Email hoặc mật khẩu không đúng!' });
+    }
+
+    if (user.banned) {
+      return res.status(403).json({ error: 'Tài khoản đã bị khóa!' });
+    }
+
+    if (cleanEmail.includes('kitchannel190882') || cleanEmail.includes('kitohio')) {
+      user.role = 'owner';
+      saveData();
+    }
+
+    req.session.userId = user.id;
+    const safeUser = { ...user };
+    delete safeUser.password;
+    return res.json({ success: true, user: safeUser });
+  } catch (err) {
+    console.error('Lỗi đăng nhập:', err);
+    return res.status(500).json({ error: 'Lỗi kết nối máy chủ!' });
   }
-
-  if (user.banned) {
-    return res.status(403).json({ error: 'Tài khoản đã bị khóa!' });
-  }
-
-  if (cleanEmail.includes('kitchannel190882') || cleanEmail.includes('kitohio')) {
-    user.role = 'owner';
-    saveData();
-  }
-
-  req.session.userId = user.id;
-  const safeUser = { ...user };
-  delete safeUser.password;
-  return res.json({ success: true, user: safeUser });
 });
 
 // KÍCH HOẠT OWNER BẰNG PASSCODE
@@ -133,8 +151,20 @@ app.post('/api/claim-owner', (req, res) => {
   return res.status(403).json({ error: 'Passcode không đúng!' });
 });
 
+// API RESET DATABASE DÀNH CHO OWNER KHI DỮ LIỆU BỊ TRÙNG
+app.post('/api/admin/reset-db', (req, res) => {
+  const { secretKey } = req.body;
+  if (secretKey === 'notcontentkitohio2026') {
+    db = { users: [], messages: [] };
+    saveData();
+    return res.json({ success: true, message: 'Đã xóa sạch dữ liệu cũ thành công!' });
+  }
+  return res.status(403).json({ error: 'Không có quyền!' });
+});
+
 app.get('/api/me', (req, res) => {
   if (!req.session.userId) return res.json(null);
+  loadData();
   const user = db.users.find(u => u.id === req.session.userId);
   if (!user) return res.json(null);
 

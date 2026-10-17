@@ -1,7 +1,7 @@
 {
   "name": "global-chat",
-  "version": "10.0.0",
-  "description": "Global Anonymous Chat App - Fast Direct Register Edition",
+  "version": "11.0.0",
+  "description": "Global Anonymous Chat App - Render Persistence & Crash Guard Fix",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
