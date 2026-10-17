@@ -149,7 +149,7 @@
       background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px); z-index: 100; justify-content: center; align-items: center;
     }
 
-    /* GOOGLE ACCOUNT CẮT VÀ XOAY CROP MODAL STYLES (ẢNH 2 CHUẨN UI) */
+    /* GOOGLE ACCOUNT CẮT VÀ XOAY CROP MODAL STYLES (CHUẨN UI ẢNH 2) */
     .google-crop-card {
       background: #1e1e1e;
       border: 1px solid #333333;
@@ -184,7 +184,6 @@
       overflow: hidden;
     }
 
-    /* Circle Mask Overlay Giống Google Account */
     .cropper-view-box, .cropper-face {
       border-radius: 50% !important;
       outline: 2px solid #ffffff !important;
@@ -267,7 +266,7 @@
             <input type="text" id="regUser" class="win11-input" placeholder="Tên hiển thị" required>
             <input type="email" id="regEmail" class="win11-input" placeholder="Email" required>
             <input type="password" id="regPass" class="win11-input" placeholder="Mật khẩu" required>
-            <button type="submit" class="win11-btn"><i class="fa-solid fa-paper-plane"></i> Gửi Mã OTP Xác Minh</button>
+            <button type="button" class="win11-btn" onclick="handleRegisterRequestOtp(event)"><i class="fa-solid fa-paper-plane"></i> Gửi Mã OTP Xác Minh</button>
           </form>
         </div>
       </div>
@@ -378,7 +377,7 @@
     </div>
   </div>
 
-  <!-- POPUP XÁC MINH OTP (KÈM MÃ DỰ PHÒNG TRỰC TIẾP TRÊN UI) -->
+  <!-- POPUP XÁC MINH OTP -->
   <div id="otpModal" class="modal-overlay">
     <div class="google-crop-card" style="width: 420px; padding: 24px;">
       <h3 style="font-size: 18px; color: #a8c7fa;"><i class="fa-solid fa-shield-halved"></i> Xác Minh Email OTP</h3>
@@ -409,20 +408,17 @@
   <!-- GOOGLE ACCOUNT CẮT VÀ XOAY CROP MODAL (ẢNH 2 CHUẨN UI) -->
   <div id="cropModal" class="modal-overlay">
     <div class="google-crop-card">
-      <!-- Header -->
       <div class="google-crop-header">
         <button class="google-crop-header-btn" onclick="closeModal('cropModal')"><i class="fa-solid fa-arrow-left"></i></button>
         <h3>Cắt và xoay</h3>
         <button class="google-crop-header-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
       </div>
 
-      <!-- Workspace với Cropper JS -->
       <div class="google-crop-workspace">
         <input type="file" id="cropFileInput" accept="image/*" style="display: none;" onchange="loadCropImage(event)">
         <img id="cropImageTarget" src="" style="max-width: 100%; max-height: 100%;">
       </div>
 
-      <!-- Footer với nút Xoay và Tiếp theo -->
       <div class="google-crop-footer">
         <button class="google-rotate-btn" onclick="rotateCropImage()">
           <i class="fa-solid fa-rotate-left" style="font-size: 16px;"></i>
@@ -497,7 +493,7 @@
     }
 
     function handleLogin(e) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       fetch('/api/login', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
@@ -512,22 +508,41 @@
     }
 
     function handleRegisterRequestOtp(e) {
-      e.preventDefault();
-      pendingRegisterEmail = document.getElementById('regEmail').value;
+      if (e) e.preventDefault();
+      
+      const regEmail = document.getElementById('regEmail').value;
+      const regUser = document.getElementById('regUser').value;
+      const regPass = document.getElementById('regPass').value;
+
+      if (!regEmail || !regUser || !regPass) {
+        showToast('Vui lòng điền đầy đủ thông tin!', 'fa-triangle-exclamation');
+        return;
+      }
+
+      pendingRegisterEmail = regEmail;
+
       fetch('/api/register-request-otp', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
-          username: document.getElementById('regUser').value,
-          email: pendingRegisterEmail,
-          password: document.getElementById('regPass').value
+          username: regUser,
+          email: regEmail,
+          password: regPass
         })
-      }).then(r => r.json()).then(d => {
+      })
+      .then(r => r.json())
+      .then(d => {
         if(d.success) {
           document.getElementById('otpDisplayBox').innerText = d.debugOtp;
           document.getElementById('otpModal').style.display = 'flex';
           showToast(`Mã OTP xác minh: ${d.debugOtp}`, 'fa-shield-halved');
-        } else showToast(d.error, 'fa-triangle-exclamation');
+        } else {
+          showToast(d.error, 'fa-triangle-exclamation');
+        }
+      })
+      .catch(err => {
+        console.error('Lỗi khi gửi mã OTP:', err);
+        showToast('Lỗi kết nối máy chủ!', 'fa-triangle-exclamation');
       });
     }
 
@@ -602,7 +617,6 @@
       });
     }
 
-    // MONACO EDITOR
     function initMonacoEditor() {
       require(['vs/editor/editor.main'], function () {
         monacoEditor = monaco.editor.create(document.getElementById('monacoEditorContainer'), {
@@ -652,7 +666,6 @@
       });
     }
 
-    // OPEN GOOGLE CROP MODAL
     function openCropModal() {
       document.getElementById('cropFileInput').click();
     }

@@ -15,7 +15,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(session({
-  secret: 'win11_ultimate_google_crop_secret_2026',
+  secret: 'win11_full_code_google_crop_secret_2026',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -49,7 +49,6 @@ function saveData() {
   }
 }
 
-// Cấu hình Transporter Nodemailer (Gửi Email Thật nếu truyền ENV, mặc định fallback mã trên màn hình)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -58,55 +57,59 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// XỬ LÝ TẠO VÀ GỬI MÃ OTP
 app.post('/api/register-request-otp', async (req, res) => {
-  const { username, email, password } = req.body;
-  if (!username || !email || !password) {
-    return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin!' });
-  }
-
-  const cleanEmail = email.toLowerCase().trim();
-  const existing = db.users.find(u => u.email.toLowerCase() === cleanEmail);
-  if (existing) {
-    return res.status(400).json({ error: 'Email này đã được sử dụng!' });
-  }
-
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const isOwner = cleanEmail.includes('kitchannel190882') || cleanEmail.includes('kitohio') || db.users.length === 0;
-
-  otpStore.set(cleanEmail, {
-    code: otpCode,
-    tempUserData: {
-      username: username.trim(),
-      email: cleanEmail,
-      password: bcrypt.hashSync(password, 10),
-      role: isOwner ? 'owner' : 'member'
-    },
-    expiresAt: Date.now() + 10 * 60 * 1000
-  });
-
-  // Thử gửi Email qua Nodemailer
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    try {
-      await transporter.sendMail({
-        from: '"Global Chat" <' + process.env.EMAIL_USER + '>',
-        to: cleanEmail,
-        subject: 'Mã xác minh tài khoản Global Chat',
-        text: `Mã OTP xác minh của bạn là: ${otpCode} (Có hiệu lực trong 10 phút)`
-      });
-    } catch (e) {
-      console.log('Chưa thể gửi email thật, tự động fallback trả mã OTP về UI');
+  try {
+    const { username, email, password } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin!' });
     }
-  }
 
-  return res.json({
-    success: true,
-    message: `Mã OTP xác minh đã được tạo cho ${cleanEmail}`,
-    debugOtp: otpCode
-  });
+    const cleanEmail = email.toLowerCase().trim();
+    const existing = db.users.find(u => u.email.toLowerCase() === cleanEmail);
+    if (existing) {
+      return res.status(400).json({ error: 'Email này đã được sử dụng!' });
+    }
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const isOwner = cleanEmail.includes('kitchannel190882') || cleanEmail.includes('kitohio') || db.users.length === 0;
+
+    otpStore.set(cleanEmail, {
+      code: otpCode,
+      tempUserData: {
+        username: username.trim(),
+        email: cleanEmail,
+        password: bcrypt.hashSync(password, 10),
+        role: isOwner ? 'owner' : 'member'
+      },
+      expiresAt: Date.now() + 10 * 60 * 1000
+    });
+
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      transporter.sendMail({
+        from: `"Global Chat" <${process.env.EMAIL_USER}>`,
+        to: cleanEmail,
+        subject: 'Mã xác minh OTP - Global Chat',
+        text: `Mã OTP của bạn là: ${otpCode}`
+      }).catch(err => console.log('Không gửi được email thật:', err.message));
+    }
+
+    return res.json({
+      success: true,
+      message: `Mã OTP xác minh đã được tạo cho ${cleanEmail}`,
+      debugOtp: otpCode
+    });
+  } catch (err) {
+    console.error('Lỗi API OTP:', err);
+    return res.status(500).json({ error: 'Lỗi máy chủ khi tạo mã OTP!' });
+  }
 });
 
+// XÁC MINH OTP VÀ TẠO TÀI KHOẢN
 app.post('/api/verify-otp', (req, res) => {
   const { email, otp } = req.body;
+  if (!email || !otp) return res.status(400).json({ error: 'Vui lòng nhập mã OTP!' });
+
   const cleanEmail = email.toLowerCase().trim();
   const record = otpStore.get(cleanEmail);
 
@@ -137,8 +140,11 @@ app.post('/api/verify-otp', (req, res) => {
   return res.json({ success: true, user: safeUser });
 });
 
+// ĐĂNG NHẬP
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Vui lòng nhập email và mật khẩu!' });
+
   const cleanEmail = email.toLowerCase().trim();
   const user = db.users.find(u => u.email.toLowerCase() === cleanEmail);
 
@@ -161,6 +167,7 @@ app.post('/api/login', (req, res) => {
   return res.json({ success: true, user: safeUser });
 });
 
+// KÍCH HOẠT OWNER BẰNG PASSCODE
 app.post('/api/claim-owner', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Chưa đăng nhập!' });
   const { secretKey } = req.body;
@@ -178,6 +185,7 @@ app.post('/api/claim-owner', (req, res) => {
   return res.status(403).json({ error: 'Passcode không đúng!' });
 });
 
+// LẤY THÔNG TIN USER HIỆN TẠI
 app.get('/api/me', (req, res) => {
   if (!req.session.userId) return res.json(null);
   const user = db.users.find(u => u.id === req.session.userId);
@@ -188,6 +196,7 @@ app.get('/api/me', (req, res) => {
   res.json(safeUser);
 });
 
+// CẬP NHẬT PROFILE
 app.post('/api/update-profile', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Chưa đăng nhập!' });
   const user = db.users.find(u => u.id === req.session.userId);
@@ -205,6 +214,7 @@ app.post('/api/update-profile', (req, res) => {
   res.json({ success: true, user: safeUser });
 });
 
+// VS CODE WEB EDITOR API (CHỈ OWNER)
 app.get('/api/editor/get-file', (req, res) => {
   const user = db.users.find(u => u.id === req.session.userId);
   if (!user || user.role !== 'owner') {
@@ -306,5 +316,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`[Google Crop UI Server] Đang chạy tại cổng ${PORT}`);
+  console.log(`[Global Chat Server] Đang chạy tại cổng ${PORT}`);
 });
