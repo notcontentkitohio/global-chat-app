@@ -14,7 +14,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(session({
-  secret: 'win11_otp_fixed_secret_2026',
+  secret: 'win11_direct_register_secret_2026',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -26,8 +26,6 @@ let db = {
   users: [],
   messages: []
 };
-
-const otpStore = new Map();
 
 if (fs.existsSync(DATA_FILE)) {
   try {
@@ -48,8 +46,8 @@ function saveData() {
   }
 }
 
-// API TẠO VÀ GỬI OTP
-app.post('/api/register-request-otp', (req, res) => {
+// ĐĂNG KÝ TRỰC TIẾP (BỎ XÁC MINH EMAIL)
+app.post('/api/register', (req, res) => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
@@ -62,69 +60,35 @@ app.post('/api/register-request-otp', (req, res) => {
       return res.status(400).json({ error: 'Email này đã được sử dụng!' });
     }
 
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const isOwner = cleanEmail.includes('kitchannel190882') || cleanEmail.includes('kitohio') || db.users.length === 0;
 
-    otpStore.set(cleanEmail, {
-      code: otpCode,
-      tempUserData: {
-        username: username.trim(),
-        email: cleanEmail,
-        password: bcrypt.hashSync(password, 10),
-        role: isOwner ? 'owner' : 'member'
-      },
-      expiresAt: Date.now() + 10 * 60 * 1000
-    });
+    const newUser = {
+      id: 'user_' + Date.now(),
+      username: username.trim(),
+      email: cleanEmail,
+      password: bcrypt.hashSync(password, 10),
+      role: isOwner ? 'owner' : 'member',
+      avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
+      banner: '',
+      bio: 'Chào mừng bạn đến với Global Chat!',
+      banned: false,
+      friends: []
+    };
 
-    console.log(`[XÁC MINH OTP] Mã xác thực cho ${cleanEmail} là: ${otpCode}`);
+    db.users.push(newUser);
+    saveData();
 
-    return res.json({
-      success: true,
-      message: `Mã OTP đã tạo thành công!`,
-      otp: otpCode
-    });
+    req.session.userId = newUser.id;
+    const safeUser = { ...newUser };
+    delete safeUser.password;
+    return res.json({ success: true, user: safeUser });
   } catch (err) {
-    console.error('Lỗi Server OTP:', err);
-    return res.status(500).json({ error: 'Lỗi server khi tạo OTP' });
+    console.error('Lỗi khi đăng ký:', err);
+    return res.status(500).json({ error: 'Lỗi máy chủ khi tạo tài khoản!' });
   }
 });
 
-// API XÁC MINH OTP
-app.post('/api/verify-otp', (req, res) => {
-  const { email, otp } = req.body;
-  if (!email || !otp) return res.status(400).json({ error: 'Vui lòng nhập mã OTP!' });
-
-  const cleanEmail = email.toLowerCase().trim();
-  const record = otpStore.get(cleanEmail);
-
-  if (!record || Date.now() > record.expiresAt || record.code !== otp.trim()) {
-    return res.status(400).json({ error: 'Mã OTP không chính xác hoặc đã hết hạn!' });
-  }
-
-  const newUser = {
-    id: 'user_' + Date.now(),
-    username: record.tempUserData.username,
-    email: cleanEmail,
-    password: record.tempUserData.password,
-    role: record.tempUserData.role,
-    avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
-    banner: '',
-    bio: 'Chào mừng bạn đến với Global Chat!',
-    banned: false,
-    friends: []
-  };
-
-  db.users.push(newUser);
-  saveData();
-  otpStore.delete(cleanEmail);
-
-  req.session.userId = newUser.id;
-  const safeUser = { ...newUser };
-  delete safeUser.password;
-  return res.json({ success: true, user: safeUser });
-});
-
-// API ĐĂNG NHẬP
+// ĐĂNG NHẬP
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Vui lòng nhập đầy đủ email và mật khẩu!' });
