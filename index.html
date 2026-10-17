@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-  <!-- Monaco Editor (VS Code Editor) -->
+  <!-- Monaco Editor -->
   <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.38.0/min/vs/editor/editor.main.min.css">
   <script>var require = { paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.38.0/min/vs' } };</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.38.0/min/vs/loader.min.js"></script>
@@ -146,10 +146,10 @@
 
     .modal-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px); z-index: 100; justify-content: center; align-items: center;
+      background: rgba(0, 0, 0, 0.82); backdrop-filter: blur(12px); z-index: 999; justify-content: center; align-items: center;
     }
 
-    /* GOOGLE ACCOUNT CẮT VÀ XOAY CROP MODAL STYLES (CHUẨN UI ẢNH 2) */
+    /* GOOGLE CROP UI */
     .google-crop-card {
       background: #1e1e1e;
       border: 1px solid #333333;
@@ -227,7 +227,6 @@
     }
     .google-pill-next-btn:hover { background: #c2e7ff; transform: scale(1.02); }
   </style>
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
 
@@ -252,22 +251,22 @@
       <div id="paneAuth" class="tab-pane active">
         <div style="background: var(--win11-glass-card); border: 1px solid var(--win11-border); padding: 32px; border-radius: 16px; max-width: 400px; width: 100%; margin: auto; display: flex; flex-direction: column; gap: 14px;">
           <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--win11-border); padding-bottom: 8px;">
-            <button id="btnAuthLogin" class="win11-btn" style="flex: 1;" onclick="switchAuthTab('login')">Đăng Nhập</button>
-            <button id="btnAuthReg" class="win11-btn" style="flex: 1; background: transparent;" onclick="switchAuthTab('reg')">Đăng Ký</button>
+            <button id="btnAuthLogin" type="button" class="win11-btn" style="flex: 1;" onclick="switchAuthTab('login')">Đăng Nhập</button>
+            <button id="btnAuthReg" type="button" class="win11-btn" style="flex: 1; background: transparent;" onclick="switchAuthTab('reg')">Đăng Ký</button>
           </div>
 
-          <form id="formLogin" onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 10px;">
-            <input type="email" id="loginEmail" class="win11-input" placeholder="Email" required>
-            <input type="password" id="loginPassword" class="win11-input" placeholder="Mật khẩu" required>
-            <button type="submit" class="win11-btn"><i class="fa-solid fa-check"></i> Đăng Nhập</button>
-          </form>
+          <div id="formLogin" style="display: flex; flex-direction: column; gap: 10px;">
+            <input type="email" id="loginEmail" class="win11-input" placeholder="Email">
+            <input type="password" id="loginPassword" class="win11-input" placeholder="Mật khẩu">
+            <button type="button" class="win11-btn" onclick="handleLogin()"><i class="fa-solid fa-check"></i> Đăng Nhập</button>
+          </div>
 
-          <form id="formReg" onsubmit="handleRegisterRequestOtp(event)" style="display: none; flex-direction: column; gap: 10px;">
-            <input type="text" id="regUser" class="win11-input" placeholder="Tên hiển thị" required>
-            <input type="email" id="regEmail" class="win11-input" placeholder="Email" required>
-            <input type="password" id="regPass" class="win11-input" placeholder="Mật khẩu" required>
-            <button type="button" class="win11-btn" onclick="handleRegisterRequestOtp(event)"><i class="fa-solid fa-paper-plane"></i> Gửi Mã OTP Xác Minh</button>
-          </form>
+          <div id="formReg" style="display: none; flex-direction: column; gap: 10px;">
+            <input type="text" id="regUser" class="win11-input" placeholder="Tên hiển thị">
+            <input type="email" id="regEmail" class="win11-input" placeholder="Email">
+            <input type="password" id="regPass" class="win11-input" placeholder="Mật khẩu">
+            <button type="button" id="btnTriggerOtp" class="win11-btn" onclick="handleRegisterRequestOtp()"><i class="fa-solid fa-paper-plane"></i> Gửi Mã OTP Xác Minh</button>
+          </div>
         </div>
       </div>
 
@@ -335,7 +334,7 @@
         </div>
       </div>
 
-      <!-- 5. SETTINGS & VS CODE WEB EDITOR PANE -->
+      <!-- 5. SETTINGS & VS CODE PANE -->
       <div id="paneSettings" class="tab-pane">
         <div style="background: var(--win11-glass-card); border: 1px solid var(--win11-border); border-radius: 16px; padding: 20px; height: 100%; display: flex; flex-direction: column; gap: 14px; overflow-y: auto;">
           <h3 style="font-size: 16px; color: #38bdf8;"><i class="fa-solid fa-gear"></i> Cài Đặt Hệ Thống & Trình Chỉnh Sửa Code</h3>
@@ -380,21 +379,21 @@
   <!-- POPUP XÁC MINH OTP -->
   <div id="otpModal" class="modal-overlay">
     <div class="google-crop-card" style="width: 420px; padding: 24px;">
-      <h3 style="font-size: 18px; color: #a8c7fa;"><i class="fa-solid fa-shield-halved"></i> Xác Minh Email OTP</h3>
+      <h3 style="font-size: 18px; color: #a8c7fa;"><i class="fa-solid fa-shield-halved"></i> Xác Minh OTP</h3>
       <p style="font-size: 12px; color: #c4c7c5; margin: 8px 0 14px;">Mã OTP xác minh 6 chữ số vừa tạo:</p>
       
-      <div id="otpDisplayBox" style="background: rgba(168, 199, 250, 0.15); border: 1px dashed #a8c7fa; padding: 10px; border-radius: 10px; text-align: center; font-size: 22px; font-weight: bold; color: #a8c7fa; letter-spacing: 6px; margin-bottom: 14px;">------</div>
+      <div id="otpDisplayBox" style="background: rgba(168, 199, 250, 0.15); border: 1px dashed #a8c7fa; padding: 10px; border-radius: 10px; text-align: center; font-size: 24px; font-weight: bold; color: #a8c7fa; letter-spacing: 6px; margin-bottom: 14px;">123456</div>
 
       <input type="text" id="otpInputCode" class="win11-input" style="text-align: center; font-size: 18px; letter-spacing: 4px;" placeholder="Nhập mã OTP..." maxlength="6">
       
       <div style="display: flex; gap: 8px; margin-top: 16px;">
         <button class="win11-btn" style="flex: 1; background: #383838;" onclick="closeModal('otpModal')">Hủy</button>
-        <button class="google-pill-next-btn" style="flex: 1;" onclick="submitVerifyOtp()">Xác Nhận OTP</button>
+        <button class="google-pill-next-btn" style="flex: 1;" onclick="submitVerifyOtp()">Xác Nhận Kích Hoạt</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL XEM PROFILE NGƯỜI KHÁC -->
+  <!-- MODAL PROFILE NGƯỜI KHÁC -->
   <div id="userProfileModal" class="modal-overlay">
     <div class="google-crop-card" style="width: 380px; padding: 24px; text-align: center; position: relative;">
       <button class="google-crop-header-btn" style="position: absolute; top: 12px; right: 12px;" onclick="closeModal('userProfileModal')"><i class="fa-solid fa-xmark"></i></button>
@@ -430,6 +429,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
     const socket = io();
     let me = null;
@@ -492,72 +492,88 @@
       }
     }
 
-    function handleLogin(e) {
-      if (e) e.preventDefault();
-      fetch('/api/login', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          email: document.getElementById('loginEmail').value,
-          password: document.getElementById('loginPassword').value
-        })
-      }).then(r => r.json()).then(d => {
+    async function handleLogin() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      if (!email || !password) {
+        showToast('Vui lòng nhập Email và Mật khẩu!', 'fa-triangle-exclamation');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ email, password })
+        });
+        const d = await res.json();
         if(d.success) { me = d.user; showMainApp(); showToast('Đăng nhập thành công!'); }
         else showToast(d.error, 'fa-triangle-exclamation');
-      });
+      } catch (err) {
+        showToast('Lỗi kết nối máy chủ!', 'fa-triangle-exclamation');
+      }
     }
 
-    function handleRegisterRequestOtp(e) {
-      if (e) e.preventDefault();
-      
-      const regEmail = document.getElementById('regEmail').value;
+    async function handleRegisterRequestOtp() {
       const regUser = document.getElementById('regUser').value;
+      const regEmail = document.getElementById('regEmail').value;
       const regPass = document.getElementById('regPass').value;
 
-      if (!regEmail || !regUser || !regPass) {
+      if (!regUser || !regEmail || !regPass) {
         showToast('Vui lòng điền đầy đủ thông tin!', 'fa-triangle-exclamation');
         return;
       }
 
       pendingRegisterEmail = regEmail;
 
-      fetch('/api/register-request-otp', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          username: regUser,
-          email: regEmail,
-          password: regPass
-        })
-      })
-      .then(r => r.json())
-      .then(d => {
-        if(d.success) {
-          document.getElementById('otpDisplayBox').innerText = d.debugOtp;
+      try {
+        const res = await fetch('/api/register-request-otp', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ username: regUser, email: regEmail, password: regPass })
+        });
+        const d = await res.json();
+
+        if (d.success) {
+          document.getElementById('otpDisplayBox').innerText = d.otp;
+          document.getElementById('otpInputCode').value = d.otp; // Tự điền sẵn mã OTP
           document.getElementById('otpModal').style.display = 'flex';
-          showToast(`Mã OTP xác minh: ${d.debugOtp}`, 'fa-shield-halved');
+          showToast(`Mã OTP xác minh của bạn là: ${d.otp}`, 'fa-shield-halved');
         } else {
           showToast(d.error, 'fa-triangle-exclamation');
         }
-      })
-      .catch(err => {
-        console.error('Lỗi khi gửi mã OTP:', err);
-        showToast('Lỗi kết nối máy chủ!', 'fa-triangle-exclamation');
-      });
+      } catch (err) {
+        showToast('Lỗi gửi yêu cầu OTP!', 'fa-triangle-exclamation');
+      }
     }
 
-    function submitVerifyOtp() {
+    async function submitVerifyOtp() {
       const otp = document.getElementById('otpInputCode').value;
-      fetch('/api/verify-otp', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ email: pendingRegisterEmail, otp })
-      }).then(r => r.json()).then(d => {
+      if (!otp) {
+        showToast('Vui lòng nhập mã OTP!', 'fa-triangle-exclamation');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/verify-otp', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ email: pendingRegisterEmail, otp })
+        });
+        const d = await res.json();
+
         if(d.success) {
-          me = d.user; closeModal('otpModal'); showMainApp();
-          showToast('Đã kích hoạt tài khoản thành công!');
-        } else showToast(d.error, 'fa-triangle-exclamation');
-      });
+          me = d.user;
+          closeModal('otpModal');
+          showMainApp();
+          showToast('Kích hoạt tài khoản thành công!');
+        } else {
+          showToast(d.error, 'fa-triangle-exclamation');
+        }
+      } catch (err) {
+        showToast('Lỗi xác minh OTP!', 'fa-triangle-exclamation');
+      }
     }
 
     function claimOwnerRole() {

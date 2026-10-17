@@ -1,7 +1,7 @@
 {
   "name": "global-chat",
-  "version": "8.0.0",
-  "description": "Global Anonymous Chat App - Full Code Edition",
+  "version": "9.0.0",
+  "description": "Global Anonymous Chat App - OTP Fixed Edition",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

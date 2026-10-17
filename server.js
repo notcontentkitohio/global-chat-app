@@ -6,7 +6,6 @@ const path = require('path');
 const fs = require('fs');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(cors());
@@ -15,7 +14,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(session({
-  secret: 'win11_full_code_google_crop_secret_2026',
+  secret: 'win11_otp_fixed_secret_2026',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -49,16 +48,8 @@ function saveData() {
   }
 }
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER || '',
-    pass: process.env.EMAIL_PASS || ''
-  }
-});
-
-// XỬ LÝ TẠO VÀ GỬI MÃ OTP
-app.post('/api/register-request-otp', async (req, res) => {
+// API TẠO VÀ GỬI OTP
+app.post('/api/register-request-otp', (req, res) => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
@@ -66,7 +57,7 @@ app.post('/api/register-request-otp', async (req, res) => {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    const existing = db.users.find(u => u.email.toLowerCase() === cleanEmail);
+    const existing = db.users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
     if (existing) {
       return res.status(400).json({ error: 'Email này đã được sử dụng!' });
     }
@@ -85,27 +76,20 @@ app.post('/api/register-request-otp', async (req, res) => {
       expiresAt: Date.now() + 10 * 60 * 1000
     });
 
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      transporter.sendMail({
-        from: `"Global Chat" <${process.env.EMAIL_USER}>`,
-        to: cleanEmail,
-        subject: 'Mã xác minh OTP - Global Chat',
-        text: `Mã OTP của bạn là: ${otpCode}`
-      }).catch(err => console.log('Không gửi được email thật:', err.message));
-    }
+    console.log(`[XÁC MINH OTP] Mã xác thực cho ${cleanEmail} là: ${otpCode}`);
 
     return res.json({
       success: true,
-      message: `Mã OTP xác minh đã được tạo cho ${cleanEmail}`,
-      debugOtp: otpCode
+      message: `Mã OTP đã tạo thành công!`,
+      otp: otpCode
     });
   } catch (err) {
-    console.error('Lỗi API OTP:', err);
-    return res.status(500).json({ error: 'Lỗi máy chủ khi tạo mã OTP!' });
+    console.error('Lỗi Server OTP:', err);
+    return res.status(500).json({ error: 'Lỗi server khi tạo OTP' });
   }
 });
 
-// XÁC MINH OTP VÀ TẠO TÀI KHOẢN
+// API XÁC MINH OTP
 app.post('/api/verify-otp', (req, res) => {
   const { email, otp } = req.body;
   if (!email || !otp) return res.status(400).json({ error: 'Vui lòng nhập mã OTP!' });
@@ -114,7 +98,7 @@ app.post('/api/verify-otp', (req, res) => {
   const record = otpStore.get(cleanEmail);
 
   if (!record || Date.now() > record.expiresAt || record.code !== otp.trim()) {
-    return res.status(400).json({ error: 'Mã OTP không đúng hoặc đã hết hạn!' });
+    return res.status(400).json({ error: 'Mã OTP không chính xác hoặc đã hết hạn!' });
   }
 
   const newUser = {
@@ -140,13 +124,13 @@ app.post('/api/verify-otp', (req, res) => {
   return res.json({ success: true, user: safeUser });
 });
 
-// ĐĂNG NHẬP
+// API ĐĂNG NHẬP
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Vui lòng nhập email và mật khẩu!' });
+  if (!email || !password) return res.status(400).json({ error: 'Vui lòng nhập đầy đủ email và mật khẩu!' });
 
   const cleanEmail = email.toLowerCase().trim();
-  const user = db.users.find(u => u.email.toLowerCase() === cleanEmail);
+  const user = db.users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
 
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.status(400).json({ error: 'Email hoặc mật khẩu không đúng!' });
@@ -185,7 +169,6 @@ app.post('/api/claim-owner', (req, res) => {
   return res.status(403).json({ error: 'Passcode không đúng!' });
 });
 
-// LẤY THÔNG TIN USER HIỆN TẠI
 app.get('/api/me', (req, res) => {
   if (!req.session.userId) return res.json(null);
   const user = db.users.find(u => u.id === req.session.userId);
@@ -196,7 +179,6 @@ app.get('/api/me', (req, res) => {
   res.json(safeUser);
 });
 
-// CẬP NHẬT PROFILE
 app.post('/api/update-profile', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Chưa đăng nhập!' });
   const user = db.users.find(u => u.id === req.session.userId);
@@ -214,7 +196,7 @@ app.post('/api/update-profile', (req, res) => {
   res.json({ success: true, user: safeUser });
 });
 
-// VS CODE WEB EDITOR API (CHỈ OWNER)
+// API EDITOR VS CODE WEB
 app.get('/api/editor/get-file', (req, res) => {
   const user = db.users.find(u => u.id === req.session.userId);
   if (!user || user.role !== 'owner') {
