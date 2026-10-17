@@ -14,7 +14,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(session({
-  secret: 'win11_pro_full_features_2026',
+  secret: 'win11_ultimate_chat_secret_2026',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -50,15 +50,14 @@ function saveData() {
 app.post('/api/register', (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
-    return res.status(400).json({ error: 'Vui lòng nhập đầy đủ thông tin!' });
+    return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin!' });
   }
 
   const existing = db.users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
   if (existing) {
-    return res.status(400).json({ error: 'Email này đã được sử dụng!' });
+    return res.status(400).json({ error: 'Email này đã được đăng ký!' });
   }
 
-  // Tự động gán quyền Owner cho tài khoản đầu tiên hoặc có chữ kitohio
   const isOwner = db.users.length === 0 || email.toLowerCase().includes('kitohio');
   const role = isOwner ? 'owner' : 'member';
 
@@ -69,6 +68,8 @@ app.post('/api/register', (req, res) => {
     password: bcrypt.hashSync(password, 10),
     role: role,
     avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
+    banner: '',
+    decoration: 'none',
     bio: 'Chào mừng bạn đến với Global Chat!',
     banned: false,
     friends: [],
@@ -89,11 +90,11 @@ app.post('/api/login', (req, res) => {
   const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
 
   if (!user || !bcrypt.compareSync(password, user.password)) {
-    return res.status(400).json({ error: 'Email hoặc mật khẩu không chính xác!' });
+    return res.status(400).json({ error: 'Email hoặc mật khẩu không đúng!' });
   }
 
   if (user.banned) {
-    return res.status(403).json({ error: 'Tài khoản của bạn đã bị khóa!' });
+    return res.status(403).json({ error: 'Tài khoản đã bị khóa!' });
   }
 
   req.session.userId = user.id;
@@ -117,10 +118,12 @@ app.post('/api/update-profile', (req, res) => {
   const user = db.users.find(u => u.id === req.session.userId);
   if (!user) return res.status(404).json({ error: 'Không tìm thấy người dùng' });
 
-  const { username, bio, avatar } = req.body;
+  const { username, bio, avatar, banner, decoration } = req.body;
   if (username) user.username = username.trim();
   if (bio !== undefined) user.bio = bio.trim();
   if (avatar) user.avatar = avatar;
+  if (banner !== undefined) user.banner = banner;
+  if (decoration) user.decoration = decoration;
 
   saveData();
   const safeUser = { ...user };
@@ -128,7 +131,6 @@ app.post('/api/update-profile', (req, res) => {
   res.json({ success: true, user: safeUser });
 });
 
-// APIs cho Moderator / Owner
 app.get('/api/admin/users', (req, res) => {
   const user = db.users.find(u => u.id === req.session.userId);
   if (!user || (user.role !== 'owner' && user.role !== 'mod')) {
@@ -186,8 +188,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// REALTIME SOCKET
-const onlineUsers = new Map(); // socket.id -> user object
+const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
   socket.emit('load_history', db.messages);
@@ -206,9 +207,10 @@ io.on('connection', (socket) => {
       user: data.user,
       role: data.role || 'member',
       avatar: data.avatar,
+      decoration: data.decoration || 'none',
       text: data.text,
       replyTo: data.replyTo || null,
-      attachment: data.attachment || null, // { type: 'image'|'video'|'file', url, name }
+      attachment: data.attachment || null,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     db.messages.push(msg);
@@ -225,5 +227,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`[Full Features Server] Đang chạy tại cổng ${PORT}`);
+  console.log(`[Ultimate Server] Đang chạy tại cổng ${PORT}`);
 });
