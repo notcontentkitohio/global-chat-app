@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global Chat - Windows 11 Fullscreen Glass UI</title>
+  <title>Global Chat - Pro Windows 11 Edition</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -11,8 +11,8 @@
     :root {
       --win11-accent: #0078d4;
       --win11-accent-hover: #106ebe;
-      --win11-glass: rgba(15, 23, 42, 0.65);
-      --win11-glass-card: rgba(255, 255, 255, 0.12);
+      --win11-glass: rgba(15, 23, 42, 0.70);
+      --win11-glass-card: rgba(255, 255, 255, 0.1);
       --win11-border: rgba(255, 255, 255, 0.18);
       --win11-font: 'Segoe UI Variable Text', 'Segoe UI', -apple-system, sans-serif;
     }
@@ -28,22 +28,19 @@
       color: #f8fafc;
     }
 
-    /* Khung Chat Full Screen */
     .win11-fullscreen-window {
       width: 100vw;
       height: 100vh;
       background: var(--win11-glass);
       backdrop-filter: blur(40px) saturate(200%);
-      -webkit-backdrop-filter: blur(40px) saturate(200%);
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
-    /* Title bar top */
     .title-bar {
       height: 40px;
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(0, 0, 0, 0.25);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -75,10 +72,9 @@
     .min { background: #ffbd2e; }
     .max { background: #27c93f; }
 
-    /* Main Container */
     .app-main {
       flex: 1;
-      padding: 20px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -89,35 +85,34 @@
       display: none;
       flex-direction: column;
       height: 100%;
-      gap: 14px;
-      animation: paneFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      gap: 12px;
+      animation: paneFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     @keyframes paneFade {
-      from { opacity: 0; transform: translateY(10px) scale(0.99); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .tab-pane.active { display: flex; }
 
-    /* Taskbar Nằm Bên Dưới (Bottom Taskbar) */
+    /* Taskbar Nằm Bên Dưới (Bottom Taskbar Hover) */
     .bottom-taskbar {
       height: 60px;
-      background: rgba(15, 23, 42, 0.75);
+      background: rgba(15, 23, 42, 0.8);
       backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
       border-top: 1px solid var(--win11-border);
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       padding: 0 16px;
       z-index: 50;
     }
 
     .taskbar-item {
       height: 42px;
-      padding: 0 16px;
+      padding: 0 14px;
       border: 1px solid transparent;
       background: rgba(255, 255, 255, 0.05);
       border-radius: 10px;
@@ -131,10 +126,7 @@
       overflow: hidden;
     }
 
-    .taskbar-item i {
-      font-size: 18px;
-      transition: transform 0.25s ease;
-    }
+    .taskbar-item i { font-size: 18px; }
 
     .taskbar-label {
       max-width: 0;
@@ -145,7 +137,6 @@
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Khi chạm/rê chuột vào icon thì chữ mới hiện trượt ra */
     .taskbar-item:hover {
       background: rgba(255, 255, 255, 0.15);
       color: #ffffff;
@@ -154,7 +145,7 @@
     }
 
     .taskbar-item:hover .taskbar-label {
-      max-width: 120px;
+      max-width: 140px;
       opacity: 1;
     }
 
@@ -162,209 +153,194 @@
       background: rgba(0, 120, 212, 0.3);
       color: #38bdf8;
       border-color: var(--win11-accent);
-      box-shadow: 0 0 15px rgba(0, 120, 212, 0.3);
     }
 
     .taskbar-item.active:hover .taskbar-label {
-      max-width: 120px;
+      max-width: 140px;
       opacity: 1;
     }
 
-    /* Message List */
+    /* Layout Chat + Sidebar Online Users */
+    .chat-layout {
+      display: flex;
+      gap: 14px;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .chat-main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .online-sidebar {
+      width: 220px;
+      background: var(--win11-glass-card);
+      border: 1px solid var(--win11-border);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .messages-container {
       flex: 1;
       background: var(--win11-glass-card);
       border-radius: 14px;
       border: 1px solid var(--win11-border);
-      padding: 20px;
+      padding: 16px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
 
     .msg-card {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
-      animation: msgPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      gap: 10px;
+      animation: msgPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     @keyframes msgPop {
-      0% { opacity: 0; transform: translateY(12px) scale(0.98); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
+      0% { opacity: 0; transform: translateY(8px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     .avatar {
-      width: 42px;
-      height: 42px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       object-fit: cover;
       border: 2px solid rgba(255, 255, 255, 0.8);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       cursor: pointer;
-      transition: transform 0.2s;
     }
 
-    .avatar:hover { transform: scale(1.08); }
-
     .msg-body {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(10px);
       border: 1px solid var(--win11-border);
       border-radius: 12px;
-      padding: 10px 16px;
-      max-width: 75%;
+      padding: 10px 14px;
+      max-width: 80%;
+      position: relative;
     }
 
-    .msg-author {
-      font-size: 12px;
+    .role-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 8px;
       font-weight: 700;
-      color: #38bdf8;
-      cursor: pointer;
-      margin-bottom: 4px;
+      margin-left: 6px;
     }
 
-    .msg-text {
-      font-size: 14px;
-      color: #f1f5f9;
-      word-break: break-word;
-      line-height: 1.45;
+    .role-owner { background: #f59e0b; color: #000; }
+    .role-mod { background: #10b981; color: #fff; }
+
+    .reply-preview-box {
+      background: rgba(0, 0, 0, 0.25);
+      border-left: 3px solid var(--win11-accent);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #cbd5e1;
+      margin-bottom: 6px;
     }
+
+    .mention-tag {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .msg-actions {
+      display: inline-flex;
+      gap: 6px;
+      margin-left: 8px;
+      opacity: 0.6;
+      cursor: pointer;
+    }
+
+    .msg-actions:hover { opacity: 1; }
 
     /* Inputs */
     .win11-input {
       width: 100%;
-      padding: 12px 16px;
+      padding: 10px 14px;
       border-radius: 10px;
       border: 1px solid var(--win11-border);
       background: rgba(255, 255, 255, 0.08);
       color: #ffffff;
-      font-size: 14px;
+      font-size: 13px;
       outline: none;
-      transition: all 0.25s ease;
       font-family: inherit;
     }
 
-    .win11-input::placeholder { color: #94a3b8; }
-
     .win11-input:focus {
-      background: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.15);
       border-color: var(--win11-accent);
-      box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.3);
     }
 
     .win11-btn {
-      padding: 12px 20px;
+      padding: 10px 18px;
       border-radius: 10px;
       border: none;
       background: var(--win11-accent);
       color: white;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.2s;
     }
 
     .win11-btn:hover {
       background: var(--win11-accent-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 120, 212, 0.4);
+      transform: translateY(-1px);
     }
 
-    /* Profile Glass Card */
-    .profile-card {
-      background: var(--win11-glass-card);
-      border-radius: 16px;
-      padding: 32px;
-      border: 1px solid var(--win11-border);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      max-width: 500px;
-      margin: auto;
-      width: 100%;
-      gap: 16px;
-    }
-
-    .profile-avatar-img {
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 4px solid var(--win11-accent);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      cursor: pointer;
-      transition: transform 0.25s, filter 0.25s;
-    }
-
-    .profile-avatar-img:hover {
-      transform: scale(1.05);
-      filter: brightness(0.85);
-    }
-
-    /* Blur Backdrop Modals */
+    /* Modal Blur */
     .modal-overlay {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
       z-index: 100;
       justify-content: center;
       align-items: center;
-      animation: modalBlurIn 0.3s ease forwards;
-    }
-
-    @keyframes modalBlurIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
     }
 
     .modal-card {
-      background: rgba(30, 41, 59, 0.85);
+      background: rgba(30, 41, 59, 0.88);
       backdrop-filter: blur(25px);
       border: 1px solid var(--win11-border);
-      width: 420px;
+      width: 440px;
       padding: 24px;
       border-radius: 16px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
       position: relative;
     }
 
-    /* Cắt / Crop Khung Tròn Đẹp Mắt */
-    .cropper-view-box, .cropper-face {
-      border-radius: 50% !important;
-    }
-    .cropper-view-box {
-      outline: 2px solid var(--win11-accent) !important;
-      outline-color: var(--win11-accent) !important;
-    }
-
-    .crop-container {
-      width: 100%;
-      height: 280px;
-      background: #090d16;
-      margin: 14px 0;
-      border-radius: 12px;
-      overflow: hidden;
-    }
+    .cropper-view-box, .cropper-face { border-radius: 50% !important; }
   </style>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
 
   <div class="win11-fullscreen-window">
-    <!-- Title Bar -->
     <div class="title-bar">
       <div class="title-brand">
         <i class="fa-solid fa-comments"></i>
-        <span>Global Anonymous Chat - Fullscreen Glass Edition</span>
+        <span>Global Chat Application - Pro Edition</span>
         <span class="brand-tag">notcontentkitohio</span>
       </div>
       <div class="win-controls">
@@ -374,25 +350,24 @@
       </div>
     </div>
 
-    <!-- App Main Area -->
     <div class="app-main">
       <!-- 1. AUTH PANE -->
       <div id="paneAuth" class="tab-pane active">
-        <div style="background: var(--win11-glass-card); border: 1px solid var(--win11-border); padding: 32px; border-radius: 16px; max-width: 420px; width: 100%; margin: auto; display: flex; flex-direction: column; gap: 16px;">
-          <div style="display: flex; gap: 10px; border-bottom: 1px solid var(--win11-border); padding-bottom: 10px;">
-            <button id="btnAuthLogin" class="win11-btn" style="flex: 1; background: transparent; border: 1px solid var(--win11-border);" onclick="switchAuthTab('login')"><i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập</button>
-            <button id="btnAuthReg" class="win11-btn" style="flex: 1; background: transparent; border: 1px solid var(--win11-border);" onclick="switchAuthTab('reg')"><i class="fa-solid fa-user-plus"></i> Đăng Ký</button>
+        <div style="background: var(--win11-glass-card); border: 1px solid var(--win11-border); padding: 32px; border-radius: 16px; max-width: 400px; width: 100%; margin: auto; display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--win11-border); padding-bottom: 8px;">
+            <button id="btnAuthLogin" class="win11-btn" style="flex: 1;" onclick="switchAuthTab('login')">Đăng Nhập</button>
+            <button id="btnAuthReg" class="win11-btn" style="flex: 1; background: transparent;" onclick="switchAuthTab('reg')">Đăng Ký</button>
           </div>
 
-          <form id="formLogin" onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 12px;">
-            <input type="email" id="loginEmail" class="win11-input" placeholder="Địa chỉ Email" required>
+          <form id="formLogin" onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 10px;">
+            <input type="email" id="loginEmail" class="win11-input" placeholder="Email" required>
             <input type="password" id="loginPassword" class="win11-input" placeholder="Mật khẩu" required>
-            <button type="submit" class="win11-btn"><i class="fa-solid fa-check"></i> Xác Nhận Đăng Nhập</button>
+            <button type="submit" class="win11-btn"><i class="fa-solid fa-check"></i> Đăng Nhập</button>
           </form>
 
-          <form id="formReg" onsubmit="handleRegister(event)" style="display: none; flex-direction: column; gap: 12px;">
+          <form id="formReg" onsubmit="handleRegister(event)" style="display: none; flex-direction: column; gap: 10px;">
             <input type="text" id="regUser" class="win11-input" placeholder="Tên hiển thị" required>
-            <input type="email" id="regEmail" class="win11-input" placeholder="Địa chỉ Email" required>
+            <input type="email" id="regEmail" class="win11-input" placeholder="Email" required>
             <input type="password" id="regPass" class="win11-input" placeholder="Mật khẩu" required>
             <button type="submit" class="win11-btn"><i class="fa-solid fa-user-check"></i> Tạo Tài Khoản</button>
           </form>
@@ -401,48 +376,73 @@
 
       <!-- 2. CHAT PANE -->
       <div id="paneChat" class="tab-pane">
-        <div class="messages-container" id="msgBox"></div>
-        <div style="display: flex; gap: 10px;">
-          <input type="text" id="msgInput" class="win11-input" placeholder="Nhập tin nhắn của bạn..." onkeydown="if(event.key==='Enter') sendMsg()">
-          <button class="win11-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i> Gửi</button>
+        <div class="chat-layout">
+          <div class="chat-main-area">
+            <div class="messages-container" id="msgBox"></div>
+
+            <!-- Reply Active Indicator -->
+            <div id="replyIndicator" style="display: none; background: rgba(0,120,212,0.2); padding: 6px 12px; border-radius: 8px; font-size: 12px; justify-content: space-between; align-items: center;">
+              <span><i class="fa-solid fa-reply"></i> Đang trả lời: <b id="replyTargetName">User</b></span>
+              <button onclick="cancelReply()" style="background: none; border: none; color: #ff5f56; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Attachment Preview Bar -->
+            <div id="attachmentPreview" style="display: none; background: rgba(255,255,255,0.08); padding: 8px; border-radius: 8px; font-size: 12px; justify-content: space-between; align-items: center;">
+              <span id="attachmentName"><i class="fa-solid fa-paperclip"></i> File đã đính kèm</span>
+              <button onclick="clearAttachment()" style="background: none; border: none; color: #ff5f56; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Input Bar -->
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="file" id="fileAttachmentInput" style="display: none;" onchange="handleFileSelected(event)">
+              <button class="win11-btn" style="padding: 10px 14px; background: rgba(255,255,255,0.1);" onclick="document.getElementById('fileAttachmentInput').click()">
+                <i class="fa-solid fa-paperclip"></i>
+              </button>
+              <input type="text" id="msgInput" class="win11-input" placeholder="Nhập tin nhắn... (Gõ @ để nhắc tên)" onkeydown="if(event.key==='Enter') sendMsg()">
+              <button class="win11-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i> Gửi</button>
+            </div>
+          </div>
+
+          <!-- Sidebar Online -->
+          <div class="online-sidebar">
+            <h4 style="font-size: 13px; color: #38bdf8;"><i class="fa-solid fa-circle" style="color: #22c55e; font-size: 10px;"></i> Đang Online (<span id="onlineCount">0</span>)</h4>
+            <div id="onlineUsersList" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1;"></div>
+          </div>
         </div>
       </div>
 
       <!-- 3. PROFILE PANE -->
       <div id="paneProfile" class="tab-pane">
-        <div class="profile-card">
-          <div onclick="openCropModal()" style="position: relative;">
-            <img id="myAvatarDisplay" class="profile-avatar-img" src="" alt="Avatar">
-            <div style="position: absolute; bottom: 0; right: 0; background: var(--win11-accent); padding: 8px; border-radius: 50%;"><i class="fa-solid fa-camera" style="font-size: 12px;"></i></div>
+        <div style="background: var(--win11-glass-card); border: 1px solid var(--win11-border); border-radius: 16px; padding: 28px; max-width: 480px; margin: auto; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px;">
+          <div onclick="openCropModal()" style="position: relative; cursor: pointer;">
+            <img id="myAvatarDisplay" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--win11-accent);" src="">
+            <div style="position: absolute; bottom: 0; right: 0; background: var(--win11-accent); padding: 6px; border-radius: 50%;"><i class="fa-solid fa-camera"></i></div>
           </div>
-          <h2 id="myUsernameDisplay" style="font-size: 20px; font-weight: 700; color: #38bdf8;"></h2>
-          <p id="myEmailDisplay" style="font-size: 13px; color: #94a3b8;"></p>
+          <h3 id="myUsernameDisplay" style="color: #38bdf8;"></h3>
+          <p id="myRoleDisplay" style="font-size: 12px; color: #f59e0b;"></p>
 
-          <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-            <label style="font-size: 12px; color: #cbd5e1;">Tên hiển thị mới:</label>
-            <input type="text" id="editUsernameInput" class="win11-input">
-
-            <label style="font-size: 12px; color: #cbd5e1;">Tiểu sử (Bio):</label>
-            <textarea id="editBioInput" class="win11-input" rows="3" style="resize: none;"></textarea>
-
-            <button class="win11-btn" style="margin-top: 6px;" onclick="saveProfileChanges()"><i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi</button>
-            <button class="win11-btn" style="background: #ef4444;" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất</button>
-          </div>
+          <input type="text" id="editUsernameInput" class="win11-input" placeholder="Tên hiển thị">
+          <textarea id="editBioInput" class="win11-input" rows="3" placeholder="Tiểu sử..."></textarea>
+          <button class="win11-btn" style="width: 100%;" onclick="saveProfileChanges()"><i class="fa-solid fa-floppy-disk"></i> Lưu Hồ Sơ</button>
+          <button class="win11-btn" style="width: 100%; background: #ef4444;" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất</button>
         </div>
       </div>
 
-      <!-- 4. FRIENDS PANE -->
-      <div id="paneFriends" class="tab-pane">
-        <div style="background: var(--win11-glass-card); border: 1px solid var(--win11-border); padding: 24px; border-radius: 16px; height: 100%; display: flex; flex-direction: column; gap: 12px;">
-          <h3 style="font-size: 16px; color: #38bdf8;"><i class="fa-solid fa-user-group"></i> Danh Sách Bạn Bè</h3>
-          <div id="friendsList" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
-            <p style="font-size: 13px; color: #94a3b8;">Chưa có bạn bè nào. Hãy bấm vào Avatar của người khác trong phòng Chat để kết bạn!</p>
+      <!-- 4. SETTINGS & MODERATOR PANE -->
+      <div id="paneSettings" class="tab-pane">
+        <div style="background: var(--win11-glass-card); border: 1px solid var(--win11-border); border-radius: 16px; padding: 24px; height: 100%; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;">
+          <h3 style="font-size: 16px; color: #38bdf8;"><i class="fa-solid fa-gear"></i> Cài Đặt Hệ Thống</h3>
+
+          <!-- Quyền Moderator Tools (Chỉ hiện khi là Owner / Mod) -->
+          <div id="modToolsSection" style="display: none; background: rgba(0,0,0,0.25); border: 1px solid var(--win11-border); padding: 16px; border-radius: 12px; flex-direction: column; gap: 12px;">
+            <h4 style="font-size: 14px; color: #f59e0b;"><i class="fa-solid fa-shield-halved"></i> Moderator Tools (Quản Trị Viên)</h4>
+            <div id="adminUserList" style="display: flex; flex-direction: column; gap: 8px;"></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- BOTTOM TASKBAR (Rê chuột vào mới hiện chữ) -->
+    <!-- BOTTOM TASKBAR HOVER -->
     <div class="bottom-taskbar" id="bottomTaskbar" style="display: none;">
       <button class="taskbar-item active" onclick="switchNav('chat')">
         <i class="fa-solid fa-comments"></i>
@@ -450,40 +450,27 @@
       </button>
       <button class="taskbar-item" onclick="switchNav('profile')">
         <i class="fa-solid fa-id-card"></i>
-        <span class="taskbar-label">Hồ Sơ Cá Nhân</span>
+        <span class="taskbar-label">Hồ Sơ</span>
       </button>
-      <button class="taskbar-item" onclick="switchNav('friends')">
-        <i class="fa-solid fa-user-group"></i>
-        <span class="taskbar-label">Bạn Bè</span>
+      <button class="taskbar-item" onclick="switchNav('settings')">
+        <i class="fa-solid fa-gear"></i>
+        <span class="taskbar-label">Cài Đặt</span>
       </button>
     </div>
   </div>
 
-  <!-- MODAL CẮT / CROP AVATAR KHUNG TRÒN -->
+  <!-- MODAL CROP AVATAR -->
   <div id="cropModal" class="modal-overlay">
     <div class="modal-card">
-      <h3 style="font-size: 16px; color: #f1f5f9;"><i class="fa-solid fa-crop-simple"></i> Cắt Ảnh Avatar Khung Tròn</h3>
-      <div style="margin-top: 12px;">
-        <input type="file" id="cropFileInput" accept="image/*" class="win11-input" onchange="loadCropImage(event)">
-      </div>
-      <div class="crop-container">
+      <h3 style="font-size: 15px; color: #fff;"><i class="fa-solid fa-crop-simple"></i> Cắt Avatar Khung Tròn</h3>
+      <input type="file" id="cropFileInput" accept="image/*" class="win11-input" style="margin-top: 10px;" onchange="loadCropImage(event)">
+      <div style="width: 100%; height: 250px; background: #000; margin: 12px 0; border-radius: 8px; overflow: hidden;">
         <img id="cropImageTarget" src="" style="max-width: 100%;">
       </div>
-      <div style="display: flex; gap: 10px;">
+      <div style="display: flex; gap: 8px;">
         <button class="win11-btn" style="flex: 1; background: #64748b;" onclick="closeModal('cropModal')">Hủy</button>
-        <button class="win11-btn" style="flex: 1;" onclick="applyCroppedAvatar()"><i class="fa-solid fa-check"></i> Cắt & Lưu</button>
+        <button class="win11-btn" style="flex: 1;" onclick="applyCroppedAvatar()">Áp Dụng</button>
       </div>
-    </div>
-  </div>
-
-  <!-- MODAL XEM PROFILE KHÁC -->
-  <div id="userProfileModal" class="modal-overlay">
-    <div class="modal-card" style="text-align: center;">
-      <button style="position: absolute; top: 14px; right: 16px; border: none; background: none; cursor: pointer; color: #94a3b8; font-size: 18px;" onclick="closeModal('userProfileModal')"><i class="fa-solid fa-xmark"></i></button>
-      <img id="targetAvatar" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--win11-accent); margin-bottom: 10px;" src="">
-      <h3 id="targetName" style="color: #38bdf8; font-size: 18px;"></h3>
-      <p id="targetBio" style="font-size: 13px; color: #94a3b8; margin: 8px 0 16px;"></p>
-      <button id="addFriendBtn" class="win11-btn" style="width: 100%;" onclick="sendFriendRequest()"><i class="fa-solid fa-user-plus"></i> Gửi Lời Mời Kết Bạn</button>
     </div>
   </div>
 
@@ -491,7 +478,8 @@
     const socket = io();
     let me = null;
     let cropper = null;
-    let selectedTargetUser = null;
+    let currentReplyTo = null;
+    let currentAttachment = null;
 
     fetch('/api/me').then(r => r.json()).then(user => {
       if (user) {
@@ -505,6 +493,12 @@
       document.getElementById('bottomTaskbar').style.display = 'flex';
       switchNav('chat');
       updateProfileUI();
+
+      socket.emit('user_online', me);
+      if (me.role === 'owner' || me.role === 'mod') {
+        document.getElementById('modToolsSection').style.display = 'flex';
+        loadAdminUserList();
+      }
     }
 
     function switchAuthTab(tab) {
@@ -524,10 +518,9 @@
       } else if (pane === 'profile') {
         document.querySelectorAll('.taskbar-item')[1].classList.add('active');
         document.getElementById('paneProfile').classList.add('active');
-      } else if (pane === 'friends') {
+      } else if (pane === 'settings') {
         document.querySelectorAll('.taskbar-item')[2].classList.add('active');
-        document.getElementById('paneFriends').classList.add('active');
-        renderFriendsList();
+        document.getElementById('paneSettings').classList.add('active');
       }
     }
 
@@ -570,80 +563,110 @@
       if(!me) return;
       document.getElementById('myAvatarDisplay').src = me.avatar;
       document.getElementById('myUsernameDisplay').innerText = me.username;
-      document.getElementById('myEmailDisplay').innerText = me.email;
+      document.getElementById('myRoleDisplay').innerText = me.role === 'owner' ? '👑 Owner (Chủ Sơ Hữu)' : (me.role==='mod' ? '🛡️ Moderator' : 'Thành viên');
       document.getElementById('editUsernameInput').value = me.username;
       document.getElementById('editBioInput').value = me.bio || '';
     }
 
     function saveProfileChanges() {
-      const username = document.getElementById('editUsernameInput').value;
-      const bio = document.getElementById('editBioInput').value;
-
       fetch('/api/update-profile', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ username, bio })
+        body: JSON.stringify({
+          username: document.getElementById('editUsernameInput').value,
+          bio: document.getElementById('editBioInput').value
+        })
       }).then(r => r.json()).then(d => {
-        if(d.success) {
-          me = d.user;
-          updateProfileUI();
-          alert('Cập nhật thông tin thành công!');
-        }
+        if(d.success) { me = d.user; updateProfileUI(); alert('Đã lưu!'); }
       });
     }
 
-    function openCropModal() {
-      document.getElementById('cropModal').style.display = 'flex';
-    }
-
-    function loadCropImage(e) {
+    // Attachments & Reply
+    function handleFileSelected(e) {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          const img = document.getElementById('cropImageTarget');
-          img.src = evt.target.result;
-          if (cropper) cropper.destroy();
-          cropper = new Cropper(img, {
-            aspectRatio: 1,
-            viewMode: 1,
-            autoCropArea: 1
-          });
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        let type = 'file';
+        if (file.type.startsWith('image/')) type = 'image';
+        else if (file.type.startsWith('video/')) type = 'video';
+
+        currentAttachment = {
+          type,
+          url: evt.target.result,
+          name: file.name
         };
-        reader.readAsDataURL(file);
-      }
+
+        document.getElementById('attachmentName').innerText = `📎 ${file.name}`;
+        document.getElementById('attachmentPreview').style.display = 'flex';
+      };
+      reader.readAsDataURL(file);
     }
 
-    function applyCroppedAvatar() {
-      if (cropper) {
-        const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
-        const croppedDataUrl = canvas.toDataURL('image/png');
+    function clearAttachment() {
+      currentAttachment = null;
+      document.getElementById('attachmentPreview').style.display = 'none';
+    }
 
-        fetch('/api/update-profile', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ avatar: croppedDataUrl })
-        }).then(r => r.json()).then(d => {
-          if(d.success) {
-            me = d.user;
-            updateProfileUI();
-            closeModal('cropModal');
-          }
-        });
-      }
+    function replyMsg(user, text) {
+      currentReplyTo = { user, text };
+      document.getElementById('replyTargetName').innerText = user;
+      document.getElementById('replyIndicator').style.display = 'flex';
+    }
+
+    function cancelReply() {
+      currentReplyTo = null;
+      document.getElementById('replyIndicator').style.display = 'none';
+    }
+
+    function mentionUser(username) {
+      const input = document.getElementById('msgInput');
+      input.value += `@${username} `;
+      input.focus();
     }
 
     function renderMsg(msg) {
       const box = document.getElementById('msgBox');
       const card = document.createElement('div');
       card.className = 'msg-card';
-      const safe = JSON.stringify(msg).replace(/'/g, "&apos;");
+
+      let roleBadge = '';
+      if (msg.role === 'owner') roleBadge = '<span class="role-badge role-owner">OWNER</span>';
+      else if (msg.role === 'mod') roleBadge = '<span class="role-badge role-mod">MOD</span>';
+
+      let replyHtml = '';
+      if (msg.replyTo) {
+        replyHtml = `<div class="reply-preview-box"><b>@${msg.replyTo.user}:</b> ${msg.replyTo.text}</div>`;
+      }
+
+      let attachHtml = '';
+      if (msg.attachment) {
+        if (msg.attachment.type === 'image') {
+          attachHtml = `<img src="${msg.attachment.url}" style="max-width: 240px; border-radius: 8px; margin-top: 6px; display: block;">`;
+        } else if (msg.attachment.type === 'video') {
+          attachHtml = `<video src="${msg.attachment.url}" controls style="max-width: 260px; border-radius: 8px; margin-top: 6px; display: block;"></video>`;
+        } else {
+          attachHtml = `<a href="${msg.attachment.url}" download="${msg.attachment.name}" style="color: #38bdf8; font-size: 12px; margin-top: 6px; display: inline-block;"><i class="fa-solid fa-download"></i> Tải về ${msg.attachment.name}</a>`;
+        }
+      }
+
+      // Highlight @Mention
+      let formattedText = msg.text;
+      if (me && msg.text.includes(`@${me.username}`)) {
+        formattedText = formattedText.replace(new RegExp(`@${me.username}`, 'g'), `<span class="mention-tag">@${me.username}</span>`);
+      }
 
       card.innerHTML = `
-        <img src="${msg.avatar}" class="avatar" onclick='viewOtherUser(${safe})'>
+        <img src="${msg.avatar}" class="avatar" onclick="mentionUser('${msg.user}')">
         <div class="msg-body">
-          <div class="msg-author" onclick='viewOtherUser(${safe})'>${msg.user}</div>
-          <div class="msg-text">${msg.text}</div>
+          ${replyHtml}
+          <div class="msg-author">
+            <span onclick="mentionUser('${msg.user}')">${msg.user}</span> ${roleBadge}
+            <span class="msg-actions" onclick="replyMsg('${msg.user}', '${msg.text}')"><i class="fa-solid fa-reply"></i></span>
+          </div>
+          <div class="msg-text">${formattedText}</div>
+          ${attachHtml}
         </div>
       `;
       box.appendChild(card);
@@ -657,55 +680,96 @@
 
     socket.on('receive_message', m => renderMsg(m));
 
+    socket.on('update_online_list', (users) => {
+      document.getElementById('onlineCount').innerText = users.length;
+      const list = document.getElementById('onlineUsersList');
+      list.innerHTML = users.map(u => `
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+          <img src="${u.avatar}" style="width: 24px; height: 24px; border-radius: 50%;">
+          <span style="color: #f1f5f9; font-weight: 600;">${u.username}</span>
+        </div>
+      `).join('');
+    });
+
     function sendMsg() {
       const input = document.getElementById('msgInput');
-      if (input.value.trim() && me) {
+      if ((input.value.trim() || currentAttachment) && me) {
         socket.emit('send_message', {
           userId: me.id,
           user: me.username,
+          role: me.role,
           avatar: me.avatar,
-          text: input.value
+          text: input.value,
+          replyTo: currentReplyTo,
+          attachment: currentAttachment
         });
         input.value = '';
+        cancelReply();
+        clearAttachment();
       }
     }
 
-    function viewOtherUser(msg) {
-      selectedTargetUser = msg;
-      document.getElementById('targetAvatar').src = msg.avatar;
-      document.getElementById('targetName').innerText = msg.user;
-      document.getElementById('targetBio').innerText = "Thành viên Global Chat";
-      document.getElementById('userProfileModal').style.display = 'flex';
+    // Cắt Avatar
+    function openCropModal() { document.getElementById('cropModal').style.display = 'flex'; }
+    function loadCropImage(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const img = document.getElementById('cropImageTarget');
+          img.src = evt.target.result;
+          if (cropper) cropper.destroy();
+          cropper = new Cropper(img, { aspectRatio: 1, viewMode: 1 });
+        };
+        reader.readAsDataURL(file);
+      }
     }
 
-    function sendFriendRequest() {
-      if (selectedTargetUser && me) {
-        socket.emit('send_friend_request', {
-          targetUserId: selectedTargetUser.userId,
-          fromUserId: me.id
+    function applyCroppedAvatar() {
+      if (cropper) {
+        const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+        fetch('/api/update-profile', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ avatar: canvas.toDataURL('image/png') })
+        }).then(r => r.json()).then(d => {
+          if(d.success) { me = d.user; updateProfileUI(); closeModal('cropModal'); }
         });
-        alert('Đã gửi lời mời kết bạn!');
-        closeModal('userProfileModal');
       }
     }
 
-    function renderFriendsList() {
-      const container = document.getElementById('friendsList');
-      if (me && me.friends && me.friends.length > 0) {
-        container.innerHTML = me.friends.map(fId => `
-          <div style="background: rgba(255,255,255,0.08); border: 1px solid var(--win11-border); padding: 12px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
-            <span style="font-size: 14px; font-weight: 600; color: #f1f5f9;">ID Bạn Bè: ${fId}</span>
-            <span style="font-size: 12px; color: #38bdf8;"><i class="fa-solid fa-circle"></i> Đã kết bạn</span>
+    function loadAdminUserList() {
+      fetch('/api/admin/users').then(r => r.json()).then(users => {
+        const list = document.getElementById('adminUserList');
+        list.innerHTML = users.map(u => `
+          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; font-size: 12px;">
+            <span><b>${u.username}</b> (${u.role})</span>
+            <div>
+              ${me.role==='owner' ? `<button class="win11-btn" style="padding: 4px 8px; font-size: 10px;" onclick="toggleModRole('${u.id}', '${u.role==='mod'?'member':'mod'}')">${u.role==='mod'?'Hạ Mod':'Phong Mod'}</button>` : ''}
+              <button class="win11-btn" style="padding: 4px 8px; font-size: 10px; background: #ef4444;" onclick="toggleBan('${u.id}')">${u.banned?'Unban':'Ban'}</button>
+            </div>
           </div>
         `).join('');
-      } else {
-        container.innerHTML = `<p style="font-size: 13px; color: #94a3b8;">Chưa có bạn bè nào.</p>`;
-      }
+      });
     }
 
-    function closeModal(id) {
-      document.getElementById(id).style.display = 'none';
+    function toggleModRole(targetUserId, newRole) {
+      fetch('/api/admin/change-role', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ targetUserId, newRole })
+      }).then(() => loadAdminUserList());
     }
+
+    function toggleBan(targetUserId) {
+      fetch('/api/admin/toggle-ban', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ targetUserId })
+      }).then(() => loadAdminUserList());
+    }
+
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
   </script>
 </body>
 </html>

@@ -10,25 +10,23 @@ const bcrypt = require('bcryptjs');
 const app = express();
 app.use(cors());
 
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ limit: '15mb', extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(session({
-  secret: 'win11_persistent_chat_secret_2026',
+  secret: 'win11_pro_full_features_2026',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
-// TỰ ĐỘNG ĐỌC/GHĨ FILE DATA.JSON ĐỂ BẢO VỆ DỮ LIỆU
 const DATA_FILE = path.join(__dirname, 'data.json');
 
 let db = {
-  users: [],       // { id, username, email, password, avatar, bio, friends: [], friendRequests: [] }
-  messages: []     // { id, userId, user, avatar, text, timestamp }
+  users: [],
+  messages: []
 };
 
-// Đọc dữ liệu từ file nếu tồn tại
 if (fs.existsSync(DATA_FILE)) {
   try {
     const rawData = fs.readFileSync(DATA_FILE, 'utf8');
@@ -36,7 +34,7 @@ if (fs.existsSync(DATA_FILE)) {
     if (!db.users) db.users = [];
     if (!db.messages) db.messages = [];
   } catch (err) {
-    console.error("Lỗi đọc file data.json, tạo mới dữ liệu", err);
+    console.error("Lỗi đọc file data.json", err);
   }
 }
 
@@ -60,13 +58,19 @@ app.post('/api/register', (req, res) => {
     return res.status(400).json({ error: 'Email này đã được sử dụng!' });
   }
 
+  // Tự động gán quyền Owner cho tài khoản đầu tiên hoặc có chữ kitohio
+  const isOwner = db.users.length === 0 || email.toLowerCase().includes('kitohio');
+  const role = isOwner ? 'owner' : 'member';
+
   const newUser = {
     id: 'user_' + Date.now(),
     username: username.trim(),
     email: email.toLowerCase().trim(),
     password: bcrypt.hashSync(password, 10),
+    role: role,
     avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
-    bio: 'Chào bạn, mình đang xài Global Chat!',
+    bio: 'Chào mừng bạn đến với Global Chat!',
+    banned: false,
     friends: [],
     friendRequests: []
   };
@@ -86,6 +90,10 @@ app.post('/api/login', (req, res) => {
 
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.status(400).json({ error: 'Email hoặc mật khẩu không chính xác!' });
+  }
+
+  if (user.banned) {
+    return res.status(403).json({ error: 'Tài khoản của bạn đã bị khóa!' });
   }
 
   req.session.userId = user.id;
@@ -120,72 +128,102 @@ app.post('/api/update-profile', (req, res) => {
   res.json({ success: true, user: safeUser });
 });
 
+// APIs cho Moderator / Owner
+app.get('/api/admin/users', (req, res) => {
+  const user = db.users.find(u => u.id === req.session.userId);
+  if (!user || (user.role !== 'owner' && user.role !== 'mod')) {
+    return res.status(403).json({ error: 'Không có quyền truy cập!' });
+  }
+
+  const safeUsersList = db.users.map(u => {
+    const clone = { ...u };
+    delete clone.password;
+    return clone;
+  });
+  res.json(safeUsersList);
+});
+
+app.post('/api/admin/change-role', (req, res) => {
+  const admin = db.users.find(u => u.id === req.session.userId);
+  if (!admin || admin.role !== 'owner') {
+    return res.status(403).json({ error: 'Chỉ Owner mới có quyền đổi vai trò!' });
+  }
+
+  const { targetUserId, newRole } = req.body;
+  const target = db.users.find(u => u.id === targetUserId);
+  if (target) {
+    target.role = newRole;
+    saveData();
+    return res.json({ success: true });
+  }
+  res.status(404).json({ error: 'Không tìm thấy user' });
+});
+
+app.post('/api/admin/toggle-ban', (req, res) => {
+  const admin = db.users.find(u => u.id === req.session.userId);
+  if (!admin || (admin.role !== 'owner' && admin.role !== 'mod')) {
+    return res.status(403).json({ error: 'Không có quyền!' });
+  }
+
+  const { targetUserId } = req.body;
+  const target = db.users.find(u => u.id === targetUserId);
+  if (target && target.role !== 'owner') {
+    target.banned = !target.banned;
+    saveData();
+    return res.json({ success: true, banned: target.banned });
+  }
+  res.status(400).json({ error: 'Không thể khóa Owner' });
+});
+
 app.get('/api/logout', (req, res) => {
   req.session.destroy(() => res.json({ success: true }));
 });
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" }, maxHttpBufferSize: 1e7 });
+const io = new Server(server, { cors: { origin: "*" }, maxHttpBufferSize: 5e7 });
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Realtime Socket.io logic
+// REALTIME SOCKET
+const onlineUsers = new Map(); // socket.id -> user object
+
 io.on('connection', (socket) => {
   socket.emit('load_history', db.messages);
+
+  socket.on('user_online', (userData) => {
+    if (userData) {
+      onlineUsers.set(socket.id, userData);
+      io.emit('update_online_list', Array.from(onlineUsers.values()));
+    }
+  });
 
   socket.on('send_message', (data) => {
     const msg = {
       id: 'msg_' + Date.now(),
       userId: data.userId,
       user: data.user,
+      role: data.role || 'member',
       avatar: data.avatar,
       text: data.text,
+      replyTo: data.replyTo || null,
+      attachment: data.attachment || null, // { type: 'image'|'video'|'file', url, name }
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     db.messages.push(msg);
-    if (db.messages.length > 60) db.messages.shift();
+    if (db.messages.length > 80) db.messages.shift();
     saveData();
     io.emit('receive_message', msg);
   });
 
-  // Hệ thống kết bạn realtime
-  socket.on('send_friend_request', ({ targetUserId, fromUserId }) => {
-    const target = db.users.find(u => u.id === targetUserId);
-    const from = db.users.find(u => u.id === fromUserId);
-
-    if (target && from) {
-      if (!target.friendRequests) target.friendRequests = [];
-      if (!target.friends) target.friends = [];
-
-      if (!target.friends.includes(fromUserId) && !target.friendRequests.includes(fromUserId)) {
-        target.friendRequests.push(fromUserId);
-        saveData();
-        io.emit('friend_request_updated', { targetUserId });
-      }
-    }
-  });
-
-  socket.on('accept_friend_request', ({ fromUserId, currentUserId }) => {
-    const user = db.users.find(u => u.id === currentUserId);
-    const friend = db.users.find(u => u.id === fromUserId);
-
-    if (user && friend) {
-      user.friendRequests = (user.friendRequests || []).filter(id => id !== fromUserId);
-      if (!user.friends) user.friends = [];
-      if (!friend.friends) friend.friends = [];
-
-      if (!user.friends.includes(fromUserId)) user.friends.push(fromUserId);
-      if (!friend.friends.includes(currentUserId)) friend.friends.push(currentUserId);
-
-      saveData();
-      io.emit('friend_status_changed', { user1: currentUserId, user2: fromUserId });
-    }
+  socket.on('disconnect', () => {
+    onlineUsers.delete(socket.id);
+    io.emit('update_online_list', Array.from(onlineUsers.values()));
   });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`[Persistent Server] Server Windows 11 đang chạy tại cổng ${PORT}`);
+  console.log(`[Full Features Server] Đang chạy tại cổng ${PORT}`);
 });
