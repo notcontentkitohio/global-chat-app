@@ -387,7 +387,7 @@
     </div>
   </div>
 
-  <!-- GOOGLE ACCOUNT CẮT VÀ XOAY CROP MODAL (ẢNH 2 CHUẨN UI) -->
+  <!-- GOOGLE ACCOUNT CẮT VÀ XOAY CROP MODAL -->
   <div id="cropModal" class="modal-overlay">
     <div class="google-crop-card">
       <div class="google-crop-header">
@@ -490,10 +490,15 @@
           body: JSON.stringify({ email, password })
         });
         const d = await res.json();
-        if(d.success) { me = d.user; showMainApp(); showToast('Đăng nhập thành công!'); }
-        else showToast(d.error, 'fa-triangle-exclamation');
+        if(d.success) { 
+          me = d.user; 
+          showMainApp(); 
+          showToast('Đăng nhập thành công!'); 
+        } else {
+          showToast(d.error, 'fa-triangle-exclamation');
+        }
       } catch (err) {
-        showToast('Lỗi kết nối máy chủ! Hãy đợi vài giây thử lại.', 'fa-triangle-exclamation');
+        showToast('Lỗi kết nối máy chủ!', 'fa-triangle-exclamation');
       }
     }
 
@@ -523,7 +528,7 @@
           showToast(d.error, 'fa-triangle-exclamation');
         }
       } catch (err) {
-        showToast('Lỗi khi đăng ký!', 'fa-triangle-exclamation');
+        showToast('Lỗi kết nối máy chủ khi đăng ký!', 'fa-triangle-exclamation');
       }
     }
 

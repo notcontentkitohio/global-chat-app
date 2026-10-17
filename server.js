@@ -14,7 +14,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(session({
-  secret: 'win11_render_persist_guard_secret_2026',
+  secret: 'win11_restored_auth_secret_2026',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -22,30 +22,29 @@ app.use(session({
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 
+// Khởi tạo Database cơ bản
 let db = {
   users: [],
   messages: []
 };
 
-// ĐỌC DỮ LIỆU AN TOÀN
+// Đọc dữ liệu từ file
 function loadData() {
-  if (fs.existsSync(DATA_FILE)) {
-    try {
-      const rawData = fs.readFileSync(DATA_FILE, 'utf8');
-      db = JSON.parse(rawData);
-      if (!Array.isArray(db.users)) db.users = [];
-      if (!Array.isArray(db.messages)) db.messages = [];
-    } catch (err) {
-      console.error("Lỗi đọc file data.json, khởi tạo database mới:", err);
-      db = { users: [], messages: [] };
-      saveData();
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const raw = fs.readFileSync(DATA_FILE, 'utf8');
+      if (raw.trim()) {
+        const parsed = JSON.parse(raw);
+        db.users = Array.isArray(parsed.users) ? parsed.users : [];
+        db.messages = Array.isArray(parsed.messages) ? parsed.messages : [];
+      }
     }
-  } else {
-    db = { users: [], messages: [] };
-    saveData();
+  } catch (err) {
+    console.error("Lỗi đọc file data.json, giữ nguyên RAM DB:", err);
   }
 }
 
+// Lưu dữ liệu an toàn
 function saveData() {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
@@ -56,27 +55,28 @@ function saveData() {
 
 loadData();
 
-// ĐĂNG KÝ TRỰC TIẾP (AN TOÀN CHỐNG LỖI)
+// API ĐĂNG KÝ MỚI chuẩn nguyên bản
 app.post('/api/register', (req, res) => {
   try {
-    loadData();
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin!' });
     }
 
     const cleanEmail = email.toLowerCase().trim();
+    const cleanUser = username.trim();
+
+    // Kiểm tra trùng lặp trong bộ nhớ
     const existing = db.users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
-    
     if (existing) {
-      return res.status(400).json({ error: 'Email này đã được sử dụng! Bạn hãy chuyển sang tab Đăng Nhập nhé.' });
+      return res.status(400).json({ error: 'Email này đã đăng ký rồi! Bấm "Đăng Nhập" để vào nhé.' });
     }
 
     const isOwner = cleanEmail.includes('kitchannel190882') || cleanEmail.includes('kitohio') || db.users.length === 0;
 
     const newUser = {
       id: 'user_' + Date.now(),
-      username: username.trim(),
+      username: cleanUser,
       email: cleanEmail,
       password: bcrypt.hashSync(password, 10),
       role: isOwner ? 'owner' : 'member',
@@ -95,27 +95,28 @@ app.post('/api/register', (req, res) => {
     delete safeUser.password;
     return res.json({ success: true, user: safeUser });
   } catch (err) {
-    console.error('Lỗi khi đăng ký:', err);
-    return res.status(500).json({ error: 'Lỗi hệ thống máy chủ!' });
+    console.error('Lỗi Register API:', err);
+    return res.status(500).json({ error: 'Lỗi server khi đăng ký!' });
   }
 });
 
-// ĐĂNG NHẬP (AN TOÀN CHỐNG CRASH)
+// API ĐĂNG NHẬP chuẩn nguyên bản
 app.post('/api/login', (req, res) => {
   try {
-    loadData();
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: 'Vui lòng nhập đầy đủ email và mật khẩu!' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Vui lòng nhập đầy đủ Email và Mật khẩu!' });
+    }
 
     const cleanEmail = email.toLowerCase().trim();
     const user = db.users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
 
     if (!user || !bcrypt.compareSync(password, user.password)) {
-      return res.status(400).json({ error: 'Email hoặc mật khẩu không đúng!' });
+      return res.status(400).json({ error: 'Email hoặc mật khẩu không chính xác!' });
     }
 
     if (user.banned) {
-      return res.status(403).json({ error: 'Tài khoản đã bị khóa!' });
+      return res.status(403).json({ error: 'Tài khoản này đã bị khóa!' });
     }
 
     if (cleanEmail.includes('kitchannel190882') || cleanEmail.includes('kitohio')) {
@@ -128,9 +129,20 @@ app.post('/api/login', (req, res) => {
     delete safeUser.password;
     return res.json({ success: true, user: safeUser });
   } catch (err) {
-    console.error('Lỗi đăng nhập:', err);
-    return res.status(500).json({ error: 'Lỗi kết nối máy chủ!' });
+    console.error('Lỗi Login API:', err);
+    return res.status(500).json({ error: 'Lỗi server khi đăng nhập!' });
   }
+});
+
+// LẤY THÔNG TIN USER HIỆN TẠI
+app.get('/api/me', (req, res) => {
+  if (!req.session.userId) return res.json(null);
+  const user = db.users.find(u => u.id === req.session.userId);
+  if (!user) return res.json(null);
+
+  const safeUser = { ...user };
+  delete safeUser.password;
+  res.json(safeUser);
 });
 
 // KÍCH HOẠT OWNER BẰNG PASSCODE
@@ -151,28 +163,7 @@ app.post('/api/claim-owner', (req, res) => {
   return res.status(403).json({ error: 'Passcode không đúng!' });
 });
 
-// API RESET DATABASE DÀNH CHO OWNER KHI DỮ LIỆU BỊ TRÙNG
-app.post('/api/admin/reset-db', (req, res) => {
-  const { secretKey } = req.body;
-  if (secretKey === 'notcontentkitohio2026') {
-    db = { users: [], messages: [] };
-    saveData();
-    return res.json({ success: true, message: 'Đã xóa sạch dữ liệu cũ thành công!' });
-  }
-  return res.status(403).json({ error: 'Không có quyền!' });
-});
-
-app.get('/api/me', (req, res) => {
-  if (!req.session.userId) return res.json(null);
-  loadData();
-  const user = db.users.find(u => u.id === req.session.userId);
-  if (!user) return res.json(null);
-
-  const safeUser = { ...user };
-  delete safeUser.password;
-  res.json(safeUser);
-});
-
+// CẬP NHẬT PROFILE
 app.post('/api/update-profile', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Chưa đăng nhập!' });
   const user = db.users.find(u => u.id === req.session.userId);
