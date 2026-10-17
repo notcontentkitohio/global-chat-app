@@ -14,7 +14,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(session({
-  secret: 'win11_restored_auth_secret_2026',
+  secret: 'global_chat_final_absolute_secret_2026',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -22,13 +22,12 @@ app.use(session({
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 
-// Khởi tạo Database cơ bản
+// Khởi tạo DB trong bộ nhớ RAM
 let db = {
   users: [],
   messages: []
 };
 
-// Đọc dữ liệu từ file
 function loadData() {
   try {
     if (fs.existsSync(DATA_FILE)) {
@@ -40,11 +39,11 @@ function loadData() {
       }
     }
   } catch (err) {
-    console.error("Lỗi đọc file data.json, giữ nguyên RAM DB:", err);
+    console.error("Lỗi đọc file data.json:", err);
+    db = { users: [], messages: [] };
   }
 }
 
-// Lưu dữ liệu an toàn
 function saveData() {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
@@ -55,9 +54,10 @@ function saveData() {
 
 loadData();
 
-// API ĐĂNG KÝ MỚI chuẩn nguyên bản
+// 1. API ĐĂNG KÝ
 app.post('/api/register', (req, res) => {
   try {
+    loadData();
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin!' });
@@ -66,10 +66,10 @@ app.post('/api/register', (req, res) => {
     const cleanEmail = email.toLowerCase().trim();
     const cleanUser = username.trim();
 
-    // Kiểm tra trùng lặp trong bộ nhớ
+    // Check trùng email
     const existing = db.users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
     if (existing) {
-      return res.status(400).json({ error: 'Email này đã đăng ký rồi! Bấm "Đăng Nhập" để vào nhé.' });
+      return res.status(400).json({ error: 'Email này đã đăng ký rồi! Bro hãy chuyển sang tab Đăng Nhập nhé.' });
     }
 
     const isOwner = cleanEmail.includes('kitchannel190882') || cleanEmail.includes('kitohio') || db.users.length === 0;
@@ -96,16 +96,17 @@ app.post('/api/register', (req, res) => {
     return res.json({ success: true, user: safeUser });
   } catch (err) {
     console.error('Lỗi Register API:', err);
-    return res.status(500).json({ error: 'Lỗi server khi đăng ký!' });
+    return res.status(500).json({ error: 'Lỗi máy chủ khi đăng ký!' });
   }
 });
 
-// API ĐĂNG NHẬP chuẩn nguyên bản
+// 2. API ĐĂNG NHẬP
 app.post('/api/login', (req, res) => {
   try {
+    loadData();
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ error: 'Vui lòng nhập đầy đủ Email và Mật khẩu!' });
+      return res.status(400).json({ error: 'Vui lòng nhập Email và Mật khẩu!' });
     }
 
     const cleanEmail = email.toLowerCase().trim();
@@ -130,13 +131,14 @@ app.post('/api/login', (req, res) => {
     return res.json({ success: true, user: safeUser });
   } catch (err) {
     console.error('Lỗi Login API:', err);
-    return res.status(500).json({ error: 'Lỗi server khi đăng nhập!' });
+    return res.status(500).json({ error: 'Lỗi máy chủ khi đăng nhập!' });
   }
 });
 
-// LẤY THÔNG TIN USER HIỆN TẠI
+// 3. API LẤY THÔNG TIN NGƯỜI DÙNG HIỆN TẠI
 app.get('/api/me', (req, res) => {
   if (!req.session.userId) return res.json(null);
+  loadData();
   const user = db.users.find(u => u.id === req.session.userId);
   if (!user) return res.json(null);
 
@@ -145,7 +147,7 @@ app.get('/api/me', (req, res) => {
   res.json(safeUser);
 });
 
-// KÍCH HOẠT OWNER BẰNG PASSCODE
+// 4. KÍCH HOẠT OWNER BẰNG PASSCODE
 app.post('/api/claim-owner', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Chưa đăng nhập!' });
   const { secretKey } = req.body;
@@ -163,7 +165,7 @@ app.post('/api/claim-owner', (req, res) => {
   return res.status(403).json({ error: 'Passcode không đúng!' });
 });
 
-// CẬP NHẬT PROFILE
+// 5. CẬP NHẬT PROFILE
 app.post('/api/update-profile', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Chưa đăng nhập!' });
   const user = db.users.find(u => u.id === req.session.userId);
@@ -181,7 +183,7 @@ app.post('/api/update-profile', (req, res) => {
   res.json({ success: true, user: safeUser });
 });
 
-// API EDITOR VS CODE WEB
+// 6. API VS CODE WEB EDITOR
 app.get('/api/editor/get-file', (req, res) => {
   const user = db.users.find(u => u.id === req.session.userId);
   if (!user || user.role !== 'owner') {
