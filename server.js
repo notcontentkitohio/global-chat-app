@@ -3,137 +3,126 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const session = require('express-session');
-const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
-const DiscordStrategy = require('passport-discord').Strategy;
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const bcrypt = require('bcryptjs');
 
 const app = express();
 app.use(cors());
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
-
-// Database lưu danh sách người dùng đăng ký bằng Email
-const usersDB = [];
-
-// Domain Render chính thức
-const DOMAIN = 'https://global-chat-app-es7g.onrender.com';
-
-// ----------------------------------------------------
-// CẤU HÌNH KEY XÁC THỰC DISCORD & GOOGLE (ĐIỀN KEY VÀO ĐÂY)
-// ----------------------------------------------------
-const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || 'ĐIỀN_DISCORD_CLIENT_ID_THẬT';
-const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || 'ĐIỀN_DISCORD_CLIENT_SECRET_THẬT';
-const DISCORD_CALLBACK_URL = process.env.DISCORD_CALLBACK_URL || `${DOMAIN}/auth/discord/callback`;
-
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'ĐIỀN_GOOGLE_CLIENT_ID_THẬT';
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'ĐIỀN_GOOGLE_CLIENT_SECRET_THẬT';
-const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || `${DOMAIN}/auth/google/callback`;
-// ----------------------------------------------------
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
 app.use(session({
-  secret: 'notcontentkitohio_super_secret_2026',
+  secret: 'win11_persistent_chat_secret_2026',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
-app.use(passport.initialize());
-app.use(passport.session());
+// TỰ ĐỘNG ĐỌC/GHĨ FILE DATA.JSON ĐỂ BẢO VỆ DỮ LIỆU
+const DATA_FILE = path.join(__dirname, 'data.json');
 
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(null, obj));
+let db = {
+  users: [],       // { id, username, email, password, avatar, bio, friends: [], friendRequests: [] }
+  messages: []     // { id, userId, user, avatar, text, timestamp }
+};
 
-// 1. Local Auth (Đăng nhập Email & Mật khẩu)
-passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
-  const user = usersDB.find(u => u.email === email);
-  if (!user) return done(null, false, { message: 'Email không tồn tại' });
-  if (!bcrypt.compareSync(password, user.password)) {
-    return done(null, false, { message: 'Mật khẩu không đúng' });
+// Đọc dữ liệu từ file nếu tồn tại
+if (fs.existsSync(DATA_FILE)) {
+  try {
+    const rawData = fs.readFileSync(DATA_FILE, 'utf8');
+    db = JSON.parse(rawData);
+    if (!db.users) db.users = [];
+    if (!db.messages) db.messages = [];
+  } catch (err) {
+    console.error("Lỗi đọc file data.json, tạo mới dữ liệu", err);
   }
-  return done(null, user);
-}));
+}
 
-// 2. Discord OAuth
-passport.use(new DiscordStrategy({
-    clientID: DISCORD_CLIENT_ID,
-    clientSecret: DISCORD_CLIENT_SECRET,
-    callbackURL: DISCORD_CALLBACK_URL,
-    scope: ['identify']
-  },
-  (accessToken, refreshToken, profile, done) => {
-    const user = {
-      id: profile.id,
-      username: profile.global_name || profile.username,
-      avatar: profile.avatar 
-        ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` 
-        : `https://cdn.discordapp.com/embed/avatars/0.png`
-    };
-    return done(null, user);
+function saveData() {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
+  } catch (err) {
+    console.error("Lỗi ghi file data.json", err);
   }
-));
+}
 
-// 3. Google OAuth
-passport.use(new GoogleStrategy({
-    clientID: GOOGLE_CLIENT_ID,
-    clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: GOOGLE_CALLBACK_URL
-  },
-  (accessToken, refreshToken, profile, done) => {
-    const user = {
-      id: profile.id,
-      username: profile.displayName,
-      avatar: profile.photos && profile.photos[0] ? profile.photos[0].value : 'https://cdn.discordapp.com/embed/avatars/0.png'
-    };
-    return done(null, user);
-  }
-));
-
-// API Routes Đăng ký / Đăng nhập local
+// REST APIs
 app.post('/api/register', (req, res) => {
   const { username, email, password } = req.body;
-  if (usersDB.find(u => u.email === email)) {
-    return res.status(400).json({ error: 'Email này đã được đăng ký!' });
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: 'Vui lòng nhập đầy đủ thông tin!' });
   }
-  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  const existing = db.users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
+  if (existing) {
+    return res.status(400).json({ error: 'Email này đã được sử dụng!' });
+  }
+
   const newUser = {
-    id: Date.now().toString(),
-    username,
-    email,
-    password: hashedPassword,
-    avatar: 'https://cdn.discordapp.com/embed/avatars/0.png'
+    id: 'user_' + Date.now(),
+    username: username.trim(),
+    email: email.toLowerCase().trim(),
+    password: bcrypt.hashSync(password, 10),
+    avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
+    bio: 'Chào bạn, mình đang xài Global Chat!',
+    friends: [],
+    friendRequests: []
   };
-  usersDB.push(newUser);
-  req.login(newUser, err => {
-    if (err) return res.status(500).json({ error: 'Lỗi đăng nhập hệ thống' });
-    return res.json({ success: true, user: newUser });
-  });
+
+  db.users.push(newUser);
+  saveData();
+
+  req.session.userId = newUser.id;
+  const safeUser = { ...newUser };
+  delete safeUser.password;
+  return res.json({ success: true, user: safeUser });
 });
 
-app.post('/api/login', passport.authenticate('local'), (req, res) => {
-  res.json({ success: true, user: req.user });
-});
+app.post('/api/login', (req, res) => {
+  const { email, password } = req.body;
+  const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
 
-// OAuth Redirect Routes
-app.get('/auth/discord', passport.authenticate('discord'));
-app.get('/auth/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), (req, res) => res.redirect('/'));
+  if (!user || !bcrypt.compareSync(password, user.password)) {
+    return res.status(400).json({ error: 'Email hoặc mật khẩu không chính xác!' });
+  }
 
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), (req, res) => res.redirect('/'));
-
-app.get('/auth/logout', (req, res) => {
-  req.logout(() => res.redirect('/'));
+  req.session.userId = user.id;
+  const safeUser = { ...user };
+  delete safeUser.password;
+  return res.json({ success: true, user: safeUser });
 });
 
 app.get('/api/me', (req, res) => {
-  if (req.isAuthenticated()) res.json(req.user);
-  else res.json(null);
+  if (!req.session.userId) return res.json(null);
+  const user = db.users.find(u => u.id === req.session.userId);
+  if (!user) return res.json(null);
+
+  const safeUser = { ...user };
+  delete safeUser.password;
+  res.json(safeUser);
 });
 
-// Socket.io Real-time Messaging
-let messageHistory = [];
+app.post('/api/update-profile', (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Chưa đăng nhập!' });
+  const user = db.users.find(u => u.id === req.session.userId);
+  if (!user) return res.status(404).json({ error: 'Không tìm thấy người dùng' });
+
+  const { username, bio, avatar } = req.body;
+  if (username) user.username = username.trim();
+  if (bio !== undefined) user.bio = bio.trim();
+  if (avatar) user.avatar = avatar;
+
+  saveData();
+  const safeUser = { ...user };
+  delete safeUser.password;
+  res.json({ success: true, user: safeUser });
+});
+
+app.get('/api/logout', (req, res) => {
+  req.session.destroy(() => res.json({ success: true }));
+});
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" }, maxHttpBufferSize: 1e7 });
@@ -142,16 +131,61 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Realtime Socket.io logic
 io.on('connection', (socket) => {
-  socket.emit('load_history', messageHistory);
+  socket.emit('load_history', db.messages);
+
   socket.on('send_message', (data) => {
-    messageHistory.push(data);
-    if (messageHistory.length > 50) messageHistory.shift();
-    io.emit('receive_message', data);
+    const msg = {
+      id: 'msg_' + Date.now(),
+      userId: data.userId,
+      user: data.user,
+      avatar: data.avatar,
+      text: data.text,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    db.messages.push(msg);
+    if (db.messages.length > 60) db.messages.shift();
+    saveData();
+    io.emit('receive_message', msg);
+  });
+
+  // Hệ thống kết bạn realtime
+  socket.on('send_friend_request', ({ targetUserId, fromUserId }) => {
+    const target = db.users.find(u => u.id === targetUserId);
+    const from = db.users.find(u => u.id === fromUserId);
+
+    if (target && from) {
+      if (!target.friendRequests) target.friendRequests = [];
+      if (!target.friends) target.friends = [];
+
+      if (!target.friends.includes(fromUserId) && !target.friendRequests.includes(fromUserId)) {
+        target.friendRequests.push(fromUserId);
+        saveData();
+        io.emit('friend_request_updated', { targetUserId });
+      }
+    }
+  });
+
+  socket.on('accept_friend_request', ({ fromUserId, currentUserId }) => {
+    const user = db.users.find(u => u.id === currentUserId);
+    const friend = db.users.find(u => u.id === fromUserId);
+
+    if (user && friend) {
+      user.friendRequests = (user.friendRequests || []).filter(id => id !== fromUserId);
+      if (!user.friends) user.friends = [];
+      if (!friend.friends) friend.friends = [];
+
+      if (!user.friends.includes(fromUserId)) user.friends.push(fromUserId);
+      if (!friend.friends.includes(currentUserId)) friend.friends.push(currentUserId);
+
+      saveData();
+      io.emit('friend_status_changed', { user1: currentUserId, user2: fromUserId });
+    }
   });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server đang chạy mượt mà tại cổng ${PORT}`);
+  console.log(`[Persistent Server] Server Windows 11 đang chạy tại cổng ${PORT}`);
 });

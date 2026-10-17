@@ -1,7 +1,7 @@
 {
   "name": "global-chat",
-  "version": "1.0.0",
-  "description": "Global Anonymous Chat App - Windows 11 UI",
+  "version": "3.0.0",
+  "description": "Global Anonymous Chat App - Win11 UI with Persistent Data & Friends System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -11,10 +11,6 @@
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
-    "passport": "^0.7.0",
-    "passport-discord": "^0.1.4",
-    "passport-google-oauth20": "^2.0.0",
-    "passport-local": "^1.0.0",
     "socket.io": "^4.7.5"
   }
 }

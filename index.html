@@ -3,24 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global Chat - Windows 11 UI by notcontentkitohio</title>
+  <title>Global Chat - Windows 11 Pro</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Thư viện Cắt / Crop Ảnh Chuyên Nghiệp -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <style>
     :root {
-      --win11-glass: rgba(243, 243, 243, 0.90);
       --win11-accent: #0078d4;
       --win11-accent-hover: #106ebe;
-      --win11-radius: 12px;
-      --win11-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+      --win11-bg-glass: rgba(248, 250, 252, 0.88);
+      --win11-border: rgba(255, 255, 255, 0.6);
+      --win11-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+      --win11-radius: 14px;
+      --win11-font: 'Segoe UI Variable Text', 'Segoe UI', -apple-system, sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-      background: linear-gradient(135deg, #0d1117, #161b22, #1f2937);
-      background-size: 400% 400%;
-      animation: gradientBg 15s ease infinite;
+      font-family: var(--win11-font);
+      background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
       height: 100vh;
       display: flex;
       justify-content: center;
@@ -28,38 +31,33 @@
       overflow: hidden;
     }
 
-    @keyframes gradientBg {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
     .win11-window {
-      width: 480px;
-      height: 640px;
-      background: var(--win11-glass);
-      backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.4);
+      width: 540px;
+      height: 720px;
+      background: var(--win11-bg-glass);
+      backdrop-filter: blur(35px) saturate(200%);
+      -webkit-backdrop-filter: blur(35px) saturate(200%);
+      border: 1px solid var(--win11-border);
       border-radius: var(--win11-radius);
       box-shadow: var(--win11-shadow);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      animation: winOpen 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: winPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    @keyframes winOpen {
-      0% { opacity: 0; transform: scale(0.92) translateY(20px); }
+    @keyframes winPop {
+      0% { opacity: 0; transform: scale(0.93) translateY(20px); }
       100% { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     .title-bar {
-      height: 40px;
+      height: 44px;
       background: rgba(255, 255, 255, 0.4);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 14px;
+      padding: 0 16px;
       border-bottom: 1px solid rgba(0, 0, 0, 0.06);
       user-select: none;
     }
@@ -67,25 +65,62 @@
     .title-brand {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       font-size: 13px;
       font-weight: 600;
-      color: #1a1a1a;
+      color: #0f172a;
     }
 
     .brand-tag {
       background: var(--win11-accent);
       color: white;
       font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 10px;
+      padding: 2px 8px;
+      border-radius: 12px;
     }
 
     .win-controls { display: flex; gap: 8px; }
-    .win-btn { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .win-btn-ctrl { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
     .close { background: #ff5f56; }
-    .minimize { background: #ffbd2e; }
-    .maximize { background: #27c93f; }
+    .min { background: #ffbd2e; }
+    .max { background: #27c93f; }
+
+    .nav-bar {
+      display: flex;
+      background: rgba(255, 255, 255, 0.5);
+      padding: 6px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      gap: 6px;
+    }
+
+    .nav-item {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      background: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-item.active {
+      background: #ffffff;
+      color: var(--win11-accent);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transform: translateY(-1px);
+    }
+
+    .nav-item:hover:not(.active) {
+      background: rgba(255,255,255,0.4);
+      color: #1e293b;
+    }
 
     .app-content {
       flex: 1;
@@ -94,65 +129,35 @@
       flex-direction: column;
       gap: 12px;
       overflow: hidden;
+      position: relative;
     }
 
-    .auth-box {
-      background: rgba(255, 255, 255, 0.85);
-      border-radius: 10px;
-      padding: 24px 20px;
-      display: flex;
+    .tab-pane {
+      display: none;
       flex-direction: column;
+      height: 100%;
       gap: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-      margin: auto 0;
+      animation: tabFadeIn 0.3s ease forwards;
     }
 
-    .auth-tabs {
-      display: flex;
-      border-bottom: 2px solid #ddd;
-      margin-bottom: 6px;
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .auth-tab-btn {
-      flex: 1;
-      padding: 8px;
-      background: none;
-      border: none;
-      font-weight: 600;
-      color: #666;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all 0.2s;
-    }
+    .tab-pane.active { display: flex; }
 
-    .auth-tab-btn.active {
-      color: var(--win11-accent);
-      border-bottom: 2px solid var(--win11-accent);
-      margin-bottom: -2px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      text-align: left;
-    }
-
-    .form-group label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #444;
-    }
-
+    /* Inputs & Buttons */
     .win11-input {
       width: 100%;
-      padding: 9px 12px;
-      border-radius: 6px;
+      padding: 10px 14px;
+      border-radius: 8px;
       border: 1px solid rgba(0, 0, 0, 0.15);
       background: rgba(255, 255, 255, 0.9);
       font-size: 13px;
       outline: none;
       transition: all 0.2s ease;
+      font-family: inherit;
     }
 
     .win11-input:focus {
@@ -163,7 +168,7 @@
 
     .win11-btn {
       padding: 9px 16px;
-      border-radius: 6px;
+      border-radius: 8px;
       border: none;
       background: var(--win11-accent);
       color: white;
@@ -174,71 +179,60 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .win11-btn:hover { background: var(--win11-accent-hover); }
-
-    .btn-discord { background: #5865F2; }
-    .btn-discord:hover { background: #4752C4; }
-
-    .btn-google { background: #4285F4; }
-    .btn-google:hover { background: #3367D6; }
-
-    .divider {
-      display: flex;
-      align-items: center;
-      text-align: center;
-      color: #888;
-      font-size: 11px;
-      margin: 4px 0;
+    .win11-btn:hover {
+      background: var(--win11-accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,120,212,0.25);
     }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      border-bottom: 1px solid #ddd;
-    }
-    .divider span { padding: 0 8px; }
 
+    .win11-btn:active { transform: translateY(0); }
+
+    /* Messages UI */
     .messages-container {
       flex: 1;
       background: rgba(255, 255, 255, 0.65);
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid rgba(0, 0, 0, 0.05);
-      padding: 12px;
+      padding: 14px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     .msg-card {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      animation: msgPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      animation: msgPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     @keyframes msgPop {
-      0% { opacity: 0; transform: translateY(10px); }
-      100% { opacity: 1; transform: translateY(0); }
+      0% { opacity: 0; transform: translateY(10px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .avatar {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       object-fit: cover;
-      border: 2px solid #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
+      transition: transform 0.2s;
     }
 
+    .avatar:hover { transform: scale(1.08); }
+
     .msg-body {
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 8px;
-      padding: 8px 12px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 10px;
+      padding: 9px 13px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
       max-width: 82%;
     }
 
@@ -252,52 +246,109 @@
 
     .msg-text {
       font-size: 13px;
-      color: #222;
+      color: #0f172a;
       word-break: break-word;
       line-height: 1.4;
     }
 
-    .input-wrapper { display: flex; gap: 8px; }
-
-    .footer-credit {
+    /* Profile UI */
+    .profile-card {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
-      font-size: 11px;
-      color: #666;
+      gap: 12px;
     }
 
+    .profile-avatar-wrapper {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .profile-avatar-img {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid var(--win11-accent);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      transition: filter 0.2s;
+    }
+
+    .profile-avatar-wrapper:hover .profile-avatar-img {
+      filter: brightness(0.85);
+    }
+
+    .avatar-edit-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 18px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .profile-avatar-wrapper:hover .avatar-edit-overlay {
+      opacity: 1;
+    }
+
+    /* Modals */
     .modal-overlay {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(6px);
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(10px);
       z-index: 100;
       justify-content: center;
       align-items: center;
+      animation: modalFade 0.25s ease forwards;
+    }
+
+    @keyframes modalFade {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     .modal-card {
       background: rgba(255, 255, 255, 0.95);
-      width: 340px;
-      padding: 20px;
+      width: 380px;
+      padding: 24px;
       border-radius: var(--win11-radius);
       box-shadow: var(--win11-shadow);
-      text-align: center;
       position: relative;
+      border: 1px solid var(--win11-border);
+      animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    .big-avatar {
-      width: 80px; height: 80px; border-radius: 50%;
-      object-fit: cover; margin-bottom: 10px; border: 3px solid var(--win11-accent);
+    @keyframes modalPop {
+      0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
     }
 
-    .crop-preview-box {
-      width: 120px; height: 120px; border-radius: 50%;
-      border: 3px solid var(--win11-accent); margin: 10px auto;
-      overflow: hidden; background: #e0e0e0;
+    .crop-container {
+      width: 100%;
+      height: 240px;
+      background: #000;
+      margin: 12px 0;
+      border-radius: 8px;
+      overflow: hidden;
     }
 
-    .crop-preview-img { width: 100%; height: 100%; object-fit: cover; }
+    .footer-credit {
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+    }
   </style>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
@@ -306,84 +357,87 @@
   <div class="win11-window">
     <div class="title-bar">
       <div class="title-brand">
-        <i class="fa-solid fa-globe"></i>
-        <span>Global Anonymous Chat</span>
+        <i class="fa-solid fa-comments"></i>
+        <span>Global Chat Application</span>
         <span class="brand-tag">notcontentkitohio</span>
       </div>
       <div class="win-controls">
-        <span class="win-btn minimize"></span>
-        <span class="win-btn maximize"></span>
-        <span class="win-btn close"></span>
+        <span class="win-btn-ctrl min"></span>
+        <span class="win-btn-ctrl max"></span>
+        <span class="win-btn-ctrl close"></span>
       </div>
     </div>
 
+    <!-- Navigation Tabs -->
+    <div class="nav-bar" id="mainNav" style="display: none;">
+      <button class="nav-item active" onclick="switchNav('chat')"><i class="fa-solid fa-message"></i> Phòng Chat</button>
+      <button class="nav-item" onclick="switchNav('profile')"><i class="fa-solid fa-id-card"></i> Hồ Sơ Cá Nhân</button>
+      <button class="nav-item" onclick="switchNav('friends')"><i class="fa-solid fa-user-group"></i> Bạn Bè</button>
+    </div>
+
     <div class="app-content">
-      <!-- Màn hình Auth -->
-      <div id="authScreen" class="auth-box">
-        <div class="auth-tabs">
-          <button class="auth-tab-btn active" onclick="switchAuthTab('login')"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</button>
-          <button class="auth-tab-btn" onclick="switchAuthTab('register')"><i class="fa-solid fa-user-plus"></i> Đăng ký</button>
-        </div>
+      <!-- 1. AUTH PANE -->
+      <div id="paneAuth" class="tab-pane active">
+        <div style="background: rgba(255,255,255,0.85); padding: 24px; border-radius: 12px; display: flex; flex-direction: column; gap: 14px; margin: auto 0;">
+          <div style="display: flex; border-bottom: 2px solid #ddd; margin-bottom: 6px;">
+            <button id="authBtnLogin" class="nav-item active" onclick="switchAuthTab('login')"><i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập</button>
+            <button id="authBtnReg" class="nav-item" onclick="switchAuthTab('reg')"><i class="fa-solid fa-user-plus"></i> Đăng Ký</button>
+          </div>
 
-        <!-- Form Đăng Nhập -->
-        <form id="loginForm" onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 10px;">
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="loginEmail" class="win11-input" placeholder="nhap@email.com" required>
-          </div>
-          <div class="form-group">
-            <label>Mật khẩu</label>
-            <input type="password" id="loginPassword" class="win11-input" placeholder="••••••••" required>
-          </div>
-          <button type="submit" class="win11-btn"><i class="fa-solid fa-check"></i> Xác nhận Đăng nhập</button>
-        </form>
+          <form id="formLogin" onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 12px;">
+            <input type="email" id="loginEmail" class="win11-input" placeholder="Địa chỉ Email" required>
+            <input type="password" id="loginPassword" class="win11-input" placeholder="Mật khẩu" required>
+            <button type="submit" class="win11-btn"><i class="fa-solid fa-check"></i> Đăng Nhập</button>
+          </form>
 
-        <!-- Form Đăng Ký -->
-        <form id="registerForm" onsubmit="handleRegister(event)" style="display: none; flex-direction: column; gap: 10px;">
-          <div class="form-group">
-            <label>Tên người dùng</label>
-            <input type="text" id="regUsername" class="win11-input" placeholder="Tên hiển thị" required>
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="regEmail" class="win11-input" placeholder="nhap@email.com" required>
-          </div>
-          <div class="form-group">
-            <label>Mật khẩu</label>
-            <input type="password" id="regPassword" class="win11-input" placeholder="••••••••" required>
-          </div>
-          <button type="submit" class="win11-btn"><i class="fa-solid fa-user-check"></i> Tạo Tài Khoản</button>
-        </form>
-
-        <div class="divider"><span>hoặc đăng nhập nhanh bằng</span></div>
-
-        <div style="display: flex; gap: 8px;">
-          <button class="win11-btn btn-discord" style="flex: 1;" onclick="location.href='/auth/discord'">
-            <i class="fa-brands fa-discord"></i> Discord
-          </button>
-          <button class="win11-btn btn-google" style="flex: 1;" onclick="location.href='/auth/google'">
-            <i class="fa-brands fa-google"></i> Google
-          </button>
+          <form id="formReg" onsubmit="handleRegister(event)" style="display: none; flex-direction: column; gap: 12px;">
+            <input type="text" id="regUser" class="win11-input" placeholder="Tên hiển thị" required>
+            <input type="email" id="regEmail" class="win11-input" placeholder="Địa chỉ Email" required>
+            <input type="password" id="regPass" class="win11-input" placeholder="Mật khẩu" required>
+            <button type="submit" class="win11-btn"><i class="fa-solid fa-user-check"></i> Tạo Tài Khoản</button>
+          </form>
         </div>
       </div>
 
-      <!-- Màn hình Chat -->
-      <div id="chatScreen" style="display: none; flex-direction: column; height: 100%; gap: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 12px; color: #444; font-weight: 600;">
-            <i class="fa-solid fa-circle-dot" style="color: #28a745;"></i> Xin chào, <b id="currentUserDisplay" style="color: var(--win11-accent);">User</b>
-          </span>
-          <div>
-            <button class="win11-btn" style="padding: 4px 8px; font-size: 11px;" onclick="openAvatarEditor()"><i class="fa-solid fa-image"></i> Đổi Avatar</button>
-            <button class="win11-btn" style="padding: 4px 8px; font-size: 11px; background: #dc3545;" onclick="location.href='/auth/logout'"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
-          </div>
-        </div>
-
-        <div class="messages-container" id="messageContainer"></div>
-
-        <div class="input-wrapper">
+      <!-- 2. CHAT PANE -->
+      <div id="paneChat" class="tab-pane">
+        <div class="messages-container" id="msgBox"></div>
+        <div style="display: flex; gap: 8px;">
           <input type="text" id="msgInput" class="win11-input" placeholder="Nhập tin nhắn..." onkeydown="if(event.key==='Enter') sendMsg()">
           <button class="win11-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i> Gửi</button>
+        </div>
+      </div>
+
+      <!-- 3. PROFILE PANE (Khung Hồ Sơ & Chỉnh Sửa) -->
+      <div id="paneProfile" class="tab-pane">
+        <div class="profile-card">
+          <div class="profile-avatar-wrapper" onclick="openCropModal()">
+            <img id="myAvatarDisplay" class="profile-avatar-img" src="" alt="Avatar">
+            <div class="avatar-edit-overlay"><i class="fa-solid fa-camera"></i></div>
+          </div>
+          <h2 id="myUsernameDisplay" style="color: #0f172a; font-size: 18px; font-weight: 700;"></h2>
+          <p id="myEmailDisplay" style="font-size: 12px; color: #64748b;"></p>
+
+          <div style="width: 100%; text-align: left; display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+            <label style="font-size: 12px; font-weight: 600; color: #334155;">Tên hiển thị:</label>
+            <input type="text" id="editUsernameInput" class="win11-input">
+
+            <label style="font-size: 12px; font-weight: 600; color: #334155;">Tiểu sử (Bio):</label>
+            <textarea id="editBioInput" class="win11-input" rows="3" style="resize: none;"></textarea>
+
+            <button class="win11-btn" style="margin-top: 6px;" onclick="saveProfileChanges()"><i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi</button>
+            <button class="win11-btn" style="background: #ef4444; margin-top: 4px;" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. FRIENDS PANE -->
+      <div id="paneFriends" class="tab-pane">
+        <div style="background: rgba(255,255,255,0.85); padding: 16px; border-radius: 12px; height: 100%; display: flex; flex-direction: column; gap: 10px;">
+          <h3 style="font-size: 14px; color: #0f172a;"><i class="fa-solid fa-user-friends"></i> Danh Sách Bạn Bè</h3>
+          <div id="friendsList" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <p style="font-size: 12px; color: #888;">Chưa có bạn bè nào. Hãy bấm vào Avatar của người khác trong phòng Chat để gửi lời mời kết bạn!</p>
+          </div>
         </div>
       </div>
 
@@ -393,73 +447,76 @@
     </div>
   </div>
 
-  <!-- Modal Profile -->
-  <div id="profileModal" class="modal-overlay">
+  <!-- MODAL CẮT / CROP AVATAR -->
+  <div id="cropModal" class="modal-overlay">
     <div class="modal-card">
-      <button style="position: absolute; top: 10px; right: 12px; border: none; background: none; cursor: pointer;" onclick="closeModal('profileModal')"><i class="fa-solid fa-xmark"></i></button>
-      <img id="modalAvatar" class="big-avatar" src="" alt="Avatar">
-      <h3 id="modalName" style="color: #111; margin-bottom: 4px;"></h3>
-      <p id="modalId" style="font-size: 12px; color: #666; margin-bottom: 12px;"></p>
-      <div style="background: rgba(0,120,212,0.08); padding: 8px; border-radius: 6px; font-size: 12px; color: var(--win11-accent); font-weight: 600;">
-        <i class="fa-solid fa-wifi"></i> Đang hoạt động trên hệ thống
+      <h3 style="font-size: 15px; color: #0f172a;"><i class="fa-solid fa-crop-simple"></i> Cắt & Chỉnh Sửa Avatar</h3>
+      <div style="margin-top: 10px;">
+        <input type="file" id="cropFileInput" accept="image/*" class="win11-input" onchange="loadCropImage(event)">
+      </div>
+      <div class="crop-container">
+        <img id="cropImageTarget" src="" style="max-width: 100%;">
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="win11-btn" style="flex: 1; background: #64748b;" onclick="closeModal('cropModal')">Hủy</button>
+        <button class="win11-btn" style="flex: 1;" onclick="applyCroppedAvatar()"><i class="fa-solid fa-check"></i> Áp Dụng</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal Đổi Avatar -->
-  <div id="avatarEditorModal" class="modal-overlay">
-    <div class="modal-card">
-      <button style="position: absolute; top: 10px; right: 12px; border: none; background: none; cursor: pointer;" onclick="closeModal('avatarEditorModal')"><i class="fa-solid fa-xmark"></i></button>
-      <h3 style="font-size: 14px; color: #111; margin-bottom: 10px;"><i class="fa-solid fa-pen-to-square"></i> Chỉnh Sửa Avatar</h3>
-
-      <div class="crop-preview-box">
-        <img id="avatarPreview" class="crop-preview-img" src="" alt="Preview">
-      </div>
-
-      <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-        <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
-        <button class="win11-btn" style="flex: 1; padding: 6px; font-size: 11px; background: #28a745;" onclick="document.getElementById('avatarFileInput').click()"><i class="fa-solid fa-upload"></i> Tải ảnh từ máy</button>
-      </div>
-
-      <input type="text" id="avatarUrlInput" class="win11-input" style="width: 100%; margin-bottom: 10px; font-size: 11px;" placeholder="Hoặc dán URL ảnh" oninput="handleUrlInput(event)">
-
-      <div style="display: flex; gap: 8px; margin-top: 10px;">
-        <button class="win11-btn" style="flex: 1; background: #6e6e6e;" onclick="closeModal('avatarEditorModal')">Hủy</button>
-        <button class="win11-btn" style="flex: 1;" onclick="applyNewAvatar()"><i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi</button>
-      </div>
+  <!-- MODAL XEM PROFILE NGƯỜI KHÁC & KẾT BẠN -->
+  <div id="userProfileModal" class="modal-overlay">
+    <div class="modal-card" style="text-align: center;">
+      <button style="position: absolute; top: 12px; right: 14px; border: none; background: none; cursor: pointer; color: #888;" onclick="closeModal('userProfileModal')"><i class="fa-solid fa-xmark"></i></button>
+      <img id="targetAvatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--win11-accent); margin-bottom: 8px;" src="">
+      <h3 id="targetName" style="color: #0f172a; font-size: 16px;"></h3>
+      <p id="targetBio" style="font-size: 12px; color: #64748b; margin: 6px 0 14px;"></p>
+      <button id="addFriendBtn" class="win11-btn" style="width: 100%;" onclick="sendFriendRequest()"><i class="fa-solid fa-user-plus"></i> Kết Bạn</button>
     </div>
   </div>
 
   <script>
     const socket = io();
-    let currentUser = null;
-    let tempAvatarData = "";
+    let me = null;
+    let cropper = null;
+    let selectedTargetUser = null;
 
-    fetch('/api/me')
-      .then(res => res.json())
-      .then(user => {
-        if (user) {
-          currentUser = user;
-          document.getElementById('currentUserDisplay').innerText = user.username;
-          document.getElementById('authScreen').style.display = 'none';
-          document.getElementById('chatScreen').style.display = 'flex';
-        } else {
-          document.getElementById('authScreen').style.display = 'flex';
-          document.getElementById('chatScreen').style.display = 'none';
-        }
-      });
+    // Fetch user
+    fetch('/api/me').then(r => r.json()).then(user => {
+      if (user) {
+        me = user;
+        showMainApp();
+      }
+    });
+
+    function showMainApp() {
+      document.getElementById('paneAuth').classList.remove('active');
+      document.getElementById('mainNav').style.display = 'flex';
+      switchNav('chat');
+      updateProfileUI();
+    }
 
     function switchAuthTab(tab) {
-      const btns = document.querySelectorAll('.auth-tab-btn');
-      btns.forEach(b => b.classList.remove('active'));
-      if (tab === 'login') {
-        btns[0].classList.add('active');
-        document.getElementById('loginForm').style.display = 'flex';
-        document.getElementById('registerForm').style.display = 'none';
-      } else {
-        btns[1].classList.add('active');
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('registerForm').style.display = 'flex';
+      document.getElementById('authBtnLogin').classList.toggle('active', tab==='login');
+      document.getElementById('authBtnReg').classList.toggle('active', tab==='reg');
+      document.getElementById('formLogin').style.display = tab==='login' ? 'flex' : 'none';
+      document.getElementById('formReg').style.display = tab==='reg' ? 'flex' : 'none';
+    }
+
+    function switchNav(pane) {
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+      if (pane === 'chat') {
+        document.querySelectorAll('.nav-item')[0].classList.add('active');
+        document.getElementById('paneChat').classList.add('active');
+      } else if (pane === 'profile') {
+        document.querySelectorAll('.nav-item')[1].classList.add('active');
+        document.getElementById('paneProfile').classList.add('active');
+      } else if (pane === 'friends') {
+        document.querySelectorAll('.nav-item')[2].classList.add('active');
+        document.getElementById('paneFriends').classList.add('active');
+        renderFriendsList();
       }
     }
 
@@ -467,16 +524,14 @@
       e.preventDefault();
       fetch('/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
           email: document.getElementById('loginEmail').value,
           password: document.getElementById('loginPassword').value
         })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) location.reload();
-        else alert('Đăng nhập thất bại!');
+      }).then(r => r.json()).then(d => {
+        if(d.success) { me = d.user; showMainApp(); }
+        else alert(d.error);
       });
     }
 
@@ -484,94 +539,158 @@
       e.preventDefault();
       fetch('/api/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
-          username: document.getElementById('regUsername').value,
+          username: document.getElementById('regUser').value,
           email: document.getElementById('regEmail').value,
-          password: document.getElementById('regPassword').value
+          password: document.getElementById('regPass').value
         })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) location.reload();
-        else alert(data.error || 'Đăng ký thất bại!');
+      }).then(r => r.json()).then(d => {
+        if(d.success) { me = d.user; showMainApp(); }
+        else alert(d.error);
       });
     }
 
-    function renderMessage(data) {
-      const container = document.getElementById('messageContainer');
-      const msgElement = document.createElement('div');
-      msgElement.className = 'msg-card';
-      const safeData = JSON.stringify(data).replace(/'/g, "&apos;");
-
-      msgElement.innerHTML = `
-        <img src="${data.avatar}" class="avatar" onclick='viewProfile(${safeData})'>
-        <div class="msg-body">
-          <div class="msg-author" onclick='viewProfile(${safeData})'>${data.user}</div>
-          <div class="msg-text">${data.text}</div>
-        </div>
-      `;
-      container.appendChild(msgElement);
-      container.scrollTop = container.scrollHeight;
+    function handleLogout() {
+      fetch('/api/logout').then(() => location.reload());
     }
 
-    socket.on('load_history', (history) => {
-      const container = document.getElementById('messageContainer');
-      container.innerHTML = '';
-      history.forEach((data) => renderMessage(data));
-    });
-
-    socket.on('receive_message', (data) => renderMessage(data));
-
-    function sendMsg() {
-      const input = document.getElementById('msgInput');
-      if (input.value.trim() !== "" && currentUser) {
-        socket.emit('send_message', {
-          userId: currentUser.id,
-          user: currentUser.username,
-          avatar: currentUser.avatar,
-          text: input.value
-        });
-        input.value = "";
-      }
+    function updateProfileUI() {
+      if(!me) return;
+      document.getElementById('myAvatarDisplay').src = me.avatar;
+      document.getElementById('myUsernameDisplay').innerText = me.username;
+      document.getElementById('myEmailDisplay').innerText = me.email;
+      document.getElementById('editUsernameInput').value = me.username;
+      document.getElementById('editBioInput').value = me.bio || '';
     }
 
-    function openAvatarEditor() {
-      tempAvatarData = currentUser.avatar;
-      document.getElementById('avatarPreview').src = tempAvatarData;
-      document.getElementById('avatarEditorModal').style.display = 'flex';
+    function saveProfileChanges() {
+      const username = document.getElementById('editUsernameInput').value;
+      const bio = document.getElementById('editBioInput').value;
+
+      fetch('/api/update-profile', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ username, bio })
+      }).then(r => r.json()).then(d => {
+        if(d.success) {
+          me = d.user;
+          updateProfileUI();
+          alert('Cập nhật hồ sơ thành công!');
+        }
+      });
     }
 
-    function handleFileSelect(e) {
+    // CROPPING LOGIC
+    function openCropModal() {
+      document.getElementById('cropModal').style.display = 'flex';
+    }
+
+    function loadCropImage(e) {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = (evt) => {
-          tempAvatarData = evt.target.result;
-          document.getElementById('avatarPreview').src = tempAvatarData;
+          const img = document.getElementById('cropImageTarget');
+          img.src = evt.target.result;
+          if (cropper) cropper.destroy();
+          cropper = new Cropper(img, {
+            aspectRatio: 1,
+            viewMode: 1
+          });
         };
         reader.readAsDataURL(file);
       }
     }
 
-    function handleUrlInput(e) {
-      const url = e.target.value.trim();
-      if (url) {
-        tempAvatarData = url;
-        document.getElementById('avatarPreview').src = url;
+    function applyCroppedAvatar() {
+      if (cropper) {
+        const canvas = cropper.getCroppedCanvas({ width: 250, height: 250 });
+        const croppedDataUrl = canvas.toDataURL('image/png');
+
+        fetch('/api/update-profile', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ avatar: croppedDataUrl })
+        }).then(r => r.json()).then(d => {
+          if(d.success) {
+            me = d.user;
+            updateProfileUI();
+            closeModal('cropModal');
+          }
+        });
       }
     }
 
-    function applyNewAvatar() {
-      currentUser.avatar = tempAvatarData;
-      closeModal('avatarEditorModal');
+    // CHAT & FRIENDS LOGIC
+    function renderMsg(msg) {
+      const box = document.getElementById('msgBox');
+      const card = document.createElement('div');
+      card.className = 'msg-card';
+      const safe = JSON.stringify(msg).replace(/'/g, "&apos;");
+
+      card.innerHTML = `
+        <img src="${msg.avatar}" class="avatar" onclick='viewOtherUser(${safe})'>
+        <div class="msg-body">
+          <div class="msg-author" onclick='viewOtherUser(${safe})'>${msg.user}</div>
+          <div class="msg-text">${msg.text}</div>
+        </div>
+      `;
+      box.appendChild(card);
+      box.scrollTop = box.scrollHeight;
     }
 
-    function viewProfile(data) {
-      document.getElementById('modalAvatar').src = data.avatar;
-      document.getElementById('modalName').innerText = data.user;
-      document.getElementById('modalId').innerText = "ID: " + (data.userId || "N/A");
-      document.getElementById('profileModal').style.display = 'flex';
+    socket.on('load_history', h => {
+      document.getElementById('msgBox').innerHTML = '';
+      h.forEach(m => renderMsg(m));
+    });
+
+    socket.on('receive_message', m => renderMsg(m));
+
+    function sendMsg() {
+      const input = document.getElementById('msgInput');
+      if (input.value.trim() && me) {
+        socket.emit('send_message', {
+          userId: me.id,
+          user: me.username,
+          avatar: me.avatar,
+          text: input.value
+        });
+        input.value = '';
+      }
+    }
+
+    function viewOtherUser(msg) {
+      selectedTargetUser = msg;
+      document.getElementById('targetAvatar').src = msg.avatar;
+      document.getElementById('targetName').innerText = msg.user;
+      document.getElementById('targetBio').innerText = "Thành viên Global Chat";
+      document.getElementById('userProfileModal').style.display = 'flex';
+    }
+
+    function sendFriendRequest() {
+      if (selectedTargetUser && me) {
+        socket.emit('send_friend_request', {
+          targetUserId: selectedTargetUser.userId,
+          fromUserId: me.id
+        });
+        alert('Đã gửi lời mời kết bạn!');
+        closeModal('userProfileModal');
+      }
+    }
+
+    function renderFriendsList() {
+      const container = document.getElementById('friendsList');
+      if (me && me.friends && me.friends.length > 0) {
+        container.innerHTML = me.friends.map(fId => `
+          <div style="background: white; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 13px; font-weight: 600;">ID Bạn Bè: ${fId}</span>
+            <span style="font-size: 11px; color: #22c55e;"><i class="fa-solid fa-circle"></i> Đã kết bạn</span>
+          </div>
+        `).join('');
+      } else {
+        container.innerHTML = `<p style="font-size: 12px; color: #888;">Chưa có bạn bè nào.</p>`;
+      }
     }
 
     function closeModal(id) {
